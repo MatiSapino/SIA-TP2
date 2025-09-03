@@ -40,6 +40,30 @@ class Selection:
         return selected
 
     def roulette(self, k_selection_size):
+        individuals, qi_values = self._accumulated_qi()
+
+        selected = []
+        for _ in range(k_selection_size):
+            r = random.random()
+            selected_index = self._binary_search(qi_values, r)
+            selected.append(individuals[selected_index])
+
+        return selected
+
+    def universal(self, k_selection_size):
+        individuals, qi_values = self._accumulated_qi()
+
+        selected = []
+        r = random.random()
+        for j in range(k_selection_size):
+            rj = (r + j) / k_selection_size
+            rj = rj % 1
+            selected_index = self._binary_search(qi_values, rj)
+            selected.append(individuals[selected_index])
+
+        return selected
+
+    def _accumulated_qi(self):
         relative_fitness = [(individual, self.fitness_obj.relative_fitness(individual)) for individual in self.population]
 
         accumulated = []
@@ -51,13 +75,7 @@ class Selection:
         individuals = [individual for individual, qi in accumulated]
         qi_values = [qi for individual, qi in accumulated]
 
-        selected = []
-        for _ in range(k_selection_size):
-            r = random.random()
-            selected_index = self._binary_search(qi_values, r)
-            selected.append(individuals[selected_index])
-
-        return selected
+        return individuals, qi_values
 
     @staticmethod
     def _binary_search(qi_values, target):
