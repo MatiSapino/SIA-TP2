@@ -91,6 +91,34 @@ class Selection:
 
         return selected
 
+    def boltzmann(self, k_selection_size, generation, T0, Tc, k):
+        T = Tc + (T0 -Tc) * math.exp(-k * generation)
+
+        exp_values = []
+        for individual in self.population:
+            fitness = self.fitness_obj.fitness(individual)
+            exp_values.append((individual, math.exp(fitness / T)))
+
+        avg_exp = sum(val for individual, val in exp_values) / len(exp_values)
+        pseudo_fitness = [(individual, val / avg_exp) for individual, val in exp_values]
+
+        acc = 0
+        individuals, qi_values = [], []
+        for individual, pf in pseudo_fitness:
+            acc += pf
+            individuals.append(individual)
+            qi_values.append(acc)
+
+        qi_values = [q / acc for q in qi_values]
+
+        selected = []
+        for _ in range(k_selection_size):
+            r = random.random()
+            selected_index = self._binary_search(qi_values, r)
+            selected.append(individuals[selected_index])
+
+        return selected
+
     def _accumulated_qi(self):
         relative_fitness = [(individual, self.fitness_obj.relative_fitness(individual)) for individual in self.population]
 
