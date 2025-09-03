@@ -63,6 +63,34 @@ class Selection:
 
         return selected
 
+    def ranking(self, k_selection_size):
+        n_population_size = len(self.population)
+
+        fitness_list = [(individual, self.fitness_obj.fitness(individual)) for individual in self.population]
+        sorted_fitness = sorted(fitness_list, key=lambda x: x[1], reverse=True)
+
+        pseudo_fitness = []
+        for rank, (individual, fitness) in enumerate(sorted_fitness, start=1):
+            f_prime = (n_population_size - rank) / n_population_size
+            pseudo_fitness.append((individual, f_prime))
+
+        acc = 0
+        individuals, qi_values = [], []
+        for individual, f_prime in pseudo_fitness:
+            acc += f_prime
+            individuals.append(individual)
+            qi_values.append(acc)
+
+        qi_values = [q / acc for q in qi_values]
+
+        selected = []
+        for _ in range(k_selection_size):
+            r = random.random()
+            selected_index = self._binary_search(qi_values, r)
+            selected.append(individuals[selected_index])
+
+        return selected
+
     def _accumulated_qi(self):
         relative_fitness = [(individual, self.fitness_obj.relative_fitness(individual)) for individual in self.population]
 
