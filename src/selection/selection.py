@@ -57,7 +57,6 @@ class Selection:
         r = random.random()
         for j in range(k_selection_size):
             rj = (r + j) / k_selection_size
-            rj = rj % 1
             selected_index = self._binary_search(qi_values, rj)
             selected.append(individuals[selected_index])
 
