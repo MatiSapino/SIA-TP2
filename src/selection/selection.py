@@ -119,6 +119,15 @@ class Selection:
 
         return selected
 
+    def deterministic_tournaments(self, n_population_size, m_selection_size):
+        selected = []
+        for _ in range(m_selection_size):
+            competitors = random.sample(self.population, n_population_size)
+            best = max(competitors, key=lambda individual: self.fitness_obj.fitness(individual))
+            selected.append(best)
+
+        return selected
+
     def _accumulated_qi(self):
         relative_fitness = [(individual, self.fitness_obj.relative_fitness(individual)) for individual in self.population]
 
