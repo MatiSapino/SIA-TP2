@@ -1,16 +1,30 @@
-# This is a sample Python script.
+import json
+import sys
 
-# Press Shift+F10 to execute it or replace it with your code.
-# Press Double Shift to search everywhere for classes, files, tool windows, actions, and settings.
+import cv2
 
+from src.fitness.fitness import Fitness
+from src.population.population import generate_initial_population
+from src.selection.selection import Selection
 
-def print_hi(name):
-    # Use a breakpoint in the code line below to debug your script.
-    print(f'Hi, {name}')  # Press Ctrl+F8 to toggle the breakpoint.
-
-
-# Press the green button in the gutter to run the script.
 if __name__ == '__main__':
-    print_hi('PyCharm')
+    with open(f"{sys.argv[1]}", "r") as file:
+        config = json.load(file)
 
-# See PyCharm help at https://www.jetbrains.com/help/pycharm/
+        target_image = cv2.imread(config["target_image"])
+        population_size = config["population_size"]
+
+        population = generate_initial_population(target_image, population_size)
+        fitness_obj = Fitness(population, target_image)
+
+        selector = Selection(population, fitness_obj)
+        selection_method = config["selection_method"]
+        if hasattr(selector, selection_method):
+            method = getattr(selector, selection_method)
+            selected = method(config["k_selection_size"])
+        else:
+            raise ValueError(f"Invalid {selection_method} selection method")
+
+        print("Selected individuals:\n")
+        for individual in selected:
+            print(f"Individual: {individual.chromosome()} \n")

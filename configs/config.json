@@ -1,0 +1,6 @@
+{
+  "target_image": "src/data/flag.png",
+  "population_size": 20,
+  "selection_method": "roulette",
+  "k_selection_size": 5
+}
