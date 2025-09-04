@@ -80,8 +80,8 @@ class Selection:
 
         return self._roulette(k_selection_size, pseudo_fitness)
 
-    def boltzmann(self, k_selection_size, generation, temperature_0, temperature_c, k):
-        temperature = temperature_c + (temperature_0 -temperature_c) * math.exp(-k * generation)
+    def boltzmann(self, k_selection_size, temperature_c, temperature_0, k_constant, t_generation):
+        temperature = temperature_c + (temperature_0 - temperature_c) * math.exp(-k_constant * t_generation)
 
         exp_values = []
         for individual in self.population:
@@ -94,20 +94,22 @@ class Selection:
         return self._roulette(k_selection_size, pseudo_fitness)
 
     def deterministic_tournaments(self, k_selection_size, m_selection_size):
+        n_population_size = self.population
+
         selected = []
         for _ in range(k_selection_size):
-            competitors = random.sample(self.population, m_selection_size)
+            competitors = random.sample(n_population_size, m_selection_size)
             best = max(competitors, key=lambda individual: self.fitness_obj.fitness(individual))
             selected.append(best)
 
         return selected
 
-    def probabilistic_tournaments(self, k_selection_size):
-        threshold = random.uniform(0.5, 1.0)
+    def probabilistic_tournaments(self, k_selection_size, threshold):
+        n_population_size = self.population
 
         selected = []
         for _ in range(k_selection_size):
-            individual1, individual2 = random.sample(self.population, 2)
+            individual1, individual2 = random.sample(n_population_size, 2)
             fitness1 = self.fitness_obj.fitness(individual1)
             fitness2 = self.fitness_obj.fitness(individual2)
 
