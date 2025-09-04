@@ -119,12 +119,31 @@ class Selection:
 
         return selected
 
-    def deterministic_tournaments(self, n_population_size, m_selection_size):
+    def deterministic_tournaments(self, k_selection_size, m_selection_size):
         selected = []
-        for _ in range(m_selection_size):
-            competitors = random.sample(self.population, n_population_size)
+        for _ in range(k_selection_size):
+            competitors = random.sample(self.population, m_selection_size)
             best = max(competitors, key=lambda individual: self.fitness_obj.fitness(individual))
             selected.append(best)
+
+        return selected
+
+    def probabilistic_tournaments(self, k_selection_size):
+        threshold = random.uniform(0.5, 1.0)
+
+        selected = []
+        for _ in range(k_selection_size):
+            individual1, individual2 = random.sample(self.population, 2)
+            fitness1 = self.fitness_obj.fitness(individual1)
+            fitness2 = self.fitness_obj.fitness(individual2)
+
+            r = random.random()
+            if r < threshold:
+                winner = individual1 if fitness1 > fitness2 else individual2
+            else:
+                winner = individual1 if fitness1 <= fitness2 else individual2
+
+            selected.append(winner)
 
         return selected
 
