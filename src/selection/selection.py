@@ -40,7 +40,11 @@ class Selection:
         return selected
 
     def roulette(self, k_selection_size):
-        individuals, qi_values = self._accumulated_qi()
+        fitness_list = [(individual, self.fitness_obj.relative_fitness(individual)) for individual in self.population]
+        return self._roulette(k_selection_size, fitness_list)
+
+    def _roulette(self, k_selection_size, fitness_list):
+        individuals, qi_values = self._accumulated_qi(fitness_list)
 
         selected = []
         for _ in range(k_selection_size):
@@ -51,7 +55,8 @@ class Selection:
         return selected
 
     def universal(self, k_selection_size):
-        individuals, qi_values = self._accumulated_qi()
+        fitness_list = [(individual, self.fitness_obj.relative_fitness(individual)) for individual in self.population]
+        individuals, qi_values = self._accumulated_qi(fitness_list)
 
         selected = []
         r = random.random()
@@ -73,22 +78,7 @@ class Selection:
             f_prime = (n_population_size - rank) / n_population_size
             pseudo_fitness.append((individual, f_prime))
 
-        acc = 0
-        individuals, qi_values = [], []
-        for individual, f_prime in pseudo_fitness:
-            acc += f_prime
-            individuals.append(individual)
-            qi_values.append(acc)
-
-        qi_values = [q / acc for q in qi_values]
-
-        selected = []
-        for _ in range(k_selection_size):
-            r = random.random()
-            selected_index = self._binary_search(qi_values, r)
-            selected.append(individuals[selected_index])
-
-        return selected
+        return self._roulette(k_selection_size, pseudo_fitness)
 
     def boltzmann(self, k_selection_size, generation, T0, Tc, k):
         T = Tc + (T0 -Tc) * math.exp(-k * generation)
@@ -146,17 +136,16 @@ class Selection:
 
         return selected
 
-    def _accumulated_qi(self):
-        relative_fitness = [(individual, self.fitness_obj.relative_fitness(individual)) for individual in self.population]
-
-        accumulated = []
+    @staticmethod
+    def _accumulated_qi(fitness_list):
         acc = 0
-        for individual, pi in relative_fitness:
+        individuals, qi_values = [], []
+        for individual, pi in fitness_list:
             acc += pi
-            accumulated.append((individual, acc))
+            individuals.append(individual)
+            qi_values.append(acc)
 
-        individuals = [individual for individual, qi in accumulated]
-        qi_values = [qi for individual, qi in accumulated]
+        qi_values = [qi / acc for qi in qi_values]
 
         return individuals, qi_values
 
