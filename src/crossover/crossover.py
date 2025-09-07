@@ -86,3 +86,23 @@ class Crossover:
             new_population.extend([child1, child2])
 
         return new_population[:self.new_population_size]
+
+    def uniform(self, p):
+        new_population = []
+
+        while len(new_population) < self.new_population_size:
+            parent1, parent2 = random.sample(self.selected_population, 2)
+            triangles1 = parent1.get_triangles()
+            triangles2 = parent2.get_triangles()
+
+            mask = np.random.rand(self.amount_of_triangle) < p
+
+            child_triangles1 = np.where(mask[:, None], triangles1, triangles2)
+            child_triangles2 = np.where(mask[:, None], triangles2, triangles1)
+
+            child1 = Individual.from_triangles(child_triangles1)
+            child2 = Individual.from_triangles(child_triangles2)
+
+            new_population.extend([child1, child2])
+
+        return new_population[:self.new_population_size]
