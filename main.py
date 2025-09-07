@@ -14,8 +14,9 @@ if __name__ == '__main__':
 
         target_image = cv2.imread(config["target_image"])
         population_size = config["population_size"]
+        amount_of_triangle = config["amount_of_triangle"]
 
-        population = generate_initial_population(target_image, population_size)
+        population = generate_initial_population(target_image, population_size, amount_of_triangle)
         fitness_obj = Fitness(population, target_image)
 
         selector = Selection(population, fitness_obj)
@@ -28,7 +29,7 @@ if __name__ == '__main__':
 
         new_population_size = population_size
         crossover_method = config["crossover_method"]
-        crossover = Crossover(selected_population, new_population_size)
+        crossover = Crossover(selected_population, new_population_size, amount_of_triangle)
         if hasattr(crossover, crossover_method):
             method = getattr(crossover, crossover_method)
             new_population = method()
@@ -37,8 +38,10 @@ if __name__ == '__main__':
 
         print("Selected individuals:\n")
         for individual in selected_population:
-            print(f"Individual: {individual.chromosome()} \n")
+            print(f"Individual: {individual.get_triangles()} \n")
 
         print("New population after crossover:\n")
         for individual in new_population:
-            print(f"Individual: {individual.chromosome()} \n")
+            print(f"Individual: {individual.get_triangles()} \n")
+
+        cv2.imwrite("output.png", fitness_obj.render_individual(new_population[0]))
