@@ -2,8 +2,8 @@ class Individual:
 
     def __init__(self):
         self.triangles = []
-        self.fitness = 0
-        self.relative_fitness = 0
+        self.fitness = None
+        self.relative_fitness = None
 
     def update_fitness(self, fitness):
         self.fitness = fitness

@@ -11,6 +11,8 @@ class Fitness:
         self.target_image = target_image
 
     def fitness(self, individual: Individual):
+        if individual.fitness is not None:
+            return individual.fitness
         generated = self.render_individual(individual)
         error = float(np.mean((self.target_image - generated) ** 2))
         fitness = 1 / (1 + error)
