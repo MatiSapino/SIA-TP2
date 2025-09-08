@@ -15,6 +15,7 @@ if __name__ == '__main__':
         target_image = cv2.imread(config["target_image"])
         population_size = config["population_size"]
         amount_of_triangle = config["amount_of_triangle"]
+        k_selection_size = config["k_selection_size"]
 
         population = generate_initial_population(target_image, population_size, amount_of_triangle)
         fitness_obj = Fitness(population, target_image)
@@ -23,25 +24,25 @@ if __name__ == '__main__':
         selection_method = config["selection_method"]
         if hasattr(selector, selection_method):
             method = getattr(selector, selection_method)
-            selected_population = method(config["k_selection_size"])
+            chosen_parents = method(k_selection_size)
         else:
             raise ValueError(f"Invalid {selection_method} selection method")
 
-        new_population_size = population_size
+        children_size = k_selection_size
         crossover_method = config["crossover_method"]
-        crossover = Crossover(selected_population, new_population_size, amount_of_triangle)
+        crossover = Crossover(chosen_parents, children_size, amount_of_triangle)
         if hasattr(crossover, crossover_method):
             method = getattr(crossover, crossover_method)
-            new_population = method()
+            children = method()
         else:
             raise ValueError(f"Invalid {crossover_method} crossover method")
 
         print("Selected individuals:\n")
-        for individual in selected_population:
+        for individual in chosen_parents:
             print(f"Individual: {individual.get_triangles()} \n")
 
         print("New population after crossover:\n")
-        for individual in new_population:
+        for individual in children:
             print(f"Individual: {individual.get_triangles()} \n")
 
-        cv2.imwrite("output.png", fitness_obj.render_individual(new_population[0]))
+        cv2.imwrite("output.png", fitness_obj.render_individual(children[0]))

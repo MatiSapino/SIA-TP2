@@ -7,16 +7,16 @@ from src.models.individual import Individual
 
 class Crossover:
 
-    def __init__(self, selected_population, new_population_size, amount_of_triangle):
-        self.selected_population = selected_population
-        self.new_population_size = new_population_size
+    def __init__(self, chosen_parents, children_size, amount_of_triangle):
+        self.chosen_parents = chosen_parents
+        self.children_size = children_size
         self.amount_of_triangle = amount_of_triangle
 
     def one_point(self):
         new_population = []
 
-        while len(new_population) < self.new_population_size:
-            parent1, parent2 = random.sample(self.selected_population, 2)
+        while len(new_population) < self.children_size:
+            parent1, parent2 = random.sample(self.chosen_parents, 2)
             triangles1 = parent1.get_triangles()
             triangles2 = parent2.get_triangles()
 
@@ -30,13 +30,13 @@ class Crossover:
 
             new_population.extend([child1, child2])
 
-        return new_population[:self.new_population_size]
+        return new_population[:self.children_size]
 
     def two_point(self):
         new_population = []
 
-        while len(new_population) < self.new_population_size:
-            parent1, parent2 = random.sample(self.selected_population, 2)
+        while len(new_population) < self.children_size:
+            parent1, parent2 = random.sample(self.chosen_parents, 2)
             triangles1 = parent1.get_triangles()
             triangles2 = parent2.get_triangles()
 
@@ -58,13 +58,13 @@ class Crossover:
 
             new_population.extend([child1, child2])
 
-        return new_population[:self.new_population_size]
+        return new_population[:self.children_size]
 
     def annular(self):
         new_population = []
 
-        while len(new_population) < self.new_population_size:
-            parent1, parent2 = random.sample(self.selected_population, 2)
+        while len(new_population) < self.children_size:
+            parent1, parent2 = random.sample(self.chosen_parents, 2)
             triangles1 = parent1.get_triangles()
             triangles2 = parent2.get_triangles()
 
@@ -85,13 +85,13 @@ class Crossover:
 
             new_population.extend([child1, child2])
 
-        return new_population[:self.new_population_size]
+        return new_population[:self.children_size]
 
     def uniform(self, p):
         new_population = []
 
-        while len(new_population) < self.new_population_size:
-            parent1, parent2 = random.sample(self.selected_population, 2)
+        while len(new_population) < self.children_size:
+            parent1, parent2 = random.sample(self.chosen_parents, 2)
             triangles1 = parent1.get_triangles()
             triangles2 = parent2.get_triangles()
 
@@ -105,4 +105,4 @@ class Crossover:
 
             new_population.extend([child1, child2])
 
-        return new_population[:self.new_population_size]
+        return new_population[:self.children_size]
