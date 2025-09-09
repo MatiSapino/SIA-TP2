@@ -18,6 +18,9 @@
 
   "implementation": "traditional",
 
+  "stop_condition": "max_time_seconds",
+
   "stop_condition_max_time_seconds": 30000,
-  "stop_condition_max_generations": 200
+  "stop_condition_max_generations": 200,
+  "stop_condition_acceptable_solution": 0.95
 }

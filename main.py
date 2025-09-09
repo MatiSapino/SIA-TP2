@@ -19,12 +19,12 @@ if __name__ == '__main__':
 
         selection_method = config["selection_method"]
         k_selection_size = config["k_selection_size"]
-        temperature_c = config["temperature_c"]
-        temperature_0 = config["temperature_0"]
-        k_constant = config["k_constant"]
-        t_generation = config["t_generation"]
-        m_selection_size = config["m_selection_size"]
-        threshold = config["threshold"]
+        temperature_c = config.get("temperature_c", 0)
+        temperature_0 = config.get("temperature_0", 0)
+        k_constant = config.get("k_constant", 0)
+        t_generation = config.get("t_generation", 0)
+        m_selection_size = config.get("m_selection_size", 0)
+        threshold = config.get("threshold", 0)
         selection_method_args = {
             "boltzmann": [temperature_c, temperature_0, k_constant, t_generation],
             "deterministic_tournaments": [m_selection_size],
@@ -33,23 +33,31 @@ if __name__ == '__main__':
 
         crossover_method = config["crossover_method"]
         crossover_probability = config["crossover_probability"]
-        p_uniform = config["p_uniform"]
+        p_uniform = config.get("p_uniform", 0.0)
         crossover_method_args = {
             "uniform": [p_uniform]
         }
 
         implementation = config["implementation"]
 
-        stop_condition_max_time_seconds = config["stop_condition_max_time_seconds"]
-        stop_condition_max_generations = config["stop_condition_max_generations"]
+        stop_condition = config["stop_condition"]
+        stop_condition_max_time_seconds = config.get("stop_condition_max_time_seconds", float('inf'))
+        stop_condition_max_generations = config.get("stop_condition_max_generations", float('inf'))
+        stop_condition_acceptable_solution = config.get("stop_condition_acceptable_solution", 1.0)
+
+        valid_stop_conditions = ["max_time_seconds", "max_generations", "acceptable_solution"]
+        if stop_condition not in valid_stop_conditions:
+            raise ValueError(f"Invalid stop condition: {stop_condition}")
 
         n_population = generate_initial_population(target_image, n_population_size, amount_of_triangle)
         fitness_obj = Fitness(n_population, target_image)
 
         generation_count = 0
         start_time = time.time()
+        best_fitness_so_far = 0
+        stop = False
 
-        while generation_count < stop_condition_max_generations and (time.time() - start_time) < stop_condition_max_time_seconds:
+        while not stop:
             selector = Selection(n_population, fitness_obj)
             if hasattr(selector, selection_method):
                 method = getattr(selector, selection_method)
@@ -95,16 +103,28 @@ if __name__ == '__main__':
             n_population = new_population
             generation_count += 1
 
+            if stop_condition == "acceptable_solution":
+                current_best_individual = max(n_population, key=lambda individual: individual.fitness)
+                best_fitness_so_far = current_best_individual.fitness
+
             if generation_count % 10 == 0:
                 print(f"Generation: {generation_count}, Time passed: {time.time() - start_time:.2f}s")
 
             generational_breach = sum(1 for individual in n_population if individual in k_children) / n_population_size
-
             print(f"Generational Breach: {generational_breach:.2f}\n")
+
+            if stop_condition == "max_time_seconds" and (time.time() - start_time) >= stop_condition_max_time_seconds:
+                stop = True
+            elif stop_condition == "max_generations" and generation_count >= stop_condition_max_generations:
+                stop = True
+            elif stop_condition == "acceptable_solution" and best_fitness_so_far >= stop_condition_acceptable_solution:
+                stop = True
+
+        best_individual = sorted(n_population, key=lambda ind: ind.fitness, reverse=True)[0]
 
         print("\n--- Stop Conditions Reached ---")
         print(f"Executed Generations: {generation_count}")
         print(f"Total Time: {time.time() - start_time:.2f} seconds")
+        print(f"Best Fitness: {best_individual.fitness:.4f}")
 
-        best_individual = sorted(n_population, key=lambda ind: ind.fitness, reverse=True)[0]
         cv2.imwrite("output.png", fitness_obj.render_individual(best_individual))
