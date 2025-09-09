@@ -69,6 +69,10 @@ if __name__ == '__main__':
 
         n_population = new_population
 
+        generational_breach = sum(1 for individual in n_population if individual in k_children) / n_population_size
+        last_generation_individuals = (1 - generational_breach) * n_population_size
+        individuals_generated = generational_breach * n_population_size
+
         print("Selected individuals:\n")
         for individual in k_chosen_parents:
             print(f"Individual: {individual.get_triangles()} \n")
@@ -80,5 +84,9 @@ if __name__ == '__main__':
         print("New population:\n")
         for individual in n_population:
             print(f"Individual: {individual.get_triangles()} \n")
+
+        print(f"Generational Breach: {generational_breach:.2f}\n")
+        print(f"Last generation individuals: {last_generation_individuals}\n")
+        print(f"Individuals generated: {individuals_generated}\n")
 
         cv2.imwrite("output.png", fitness_obj.render_individual(k_children[0]))
