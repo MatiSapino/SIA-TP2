@@ -1,8 +1,6 @@
 import math
 import random
 
-import numpy as np
-
 from src.models.individual import Individual
 
 
@@ -26,8 +24,8 @@ class Crossover:
 
                 locus = random.randint(0, self.amount_of_triangle - 1)
 
-                child_triangles1 = np.concatenate([triangles1[:locus], triangles2[locus:]])
-                child_triangles2 = np.concatenate([triangles2[:locus], triangles1[locus:]])
+                child_triangles1 = triangles1[:locus] + triangles2[locus:]
+                child_triangles2 = triangles2[:locus] + triangles1[locus:]
 
                 child1 = Individual.from_triangles(child_triangles1)
                 child2 = Individual.from_triangles(child_triangles2)
@@ -51,16 +49,8 @@ class Crossover:
 
                 p1, p2 = sorted(random.sample(range(0, self.amount_of_triangle), 2))
 
-                child_triangles1 = np.concatenate([
-                    triangles1[:p1],
-                    triangles2[p1:p2],
-                    triangles1[p2:]
-                ])
-                child_triangles2 = np.concatenate([
-                    triangles2[:p1],
-                    triangles1[p1:p2],
-                    triangles2[p2:]
-                ])
+                child_triangles1 = triangles1[:p1] + triangles2[p1:p2] + triangles1[p2:]
+                child_triangles2 = triangles2[:p1] + triangles1[p1:p2] + triangles2[p2:]
 
                 child1 = Individual.from_triangles(child_triangles1)
                 child2 = Individual.from_triangles(child_triangles2)
@@ -87,12 +77,17 @@ class Crossover:
                 locus_p = random.randint(0, size - 1)
                 size_l = random.randint(0, math.ceil(size / 2))
 
-                mask = np.zeros(size, dtype=bool)
-                for i in range(size_l):
-                    mask[(locus_p + i) % size] = True
+                child_triangles1 = []
+                child_triangles2 = []
 
-                child_triangles1 = np.where(mask, triangles2, triangles1)
-                child_triangles2 = np.where(mask, triangles1, triangles2)
+                for i in range(size):
+                    is_in_annulus = ((i - locus_p + size) % size) < size_l
+                    if is_in_annulus:
+                        child_triangles1.append(triangles2[i])
+                        child_triangles2.append(triangles1[i])
+                    else:
+                        child_triangles1.append(triangles1[i])
+                        child_triangles2.append(triangles2[i])
 
                 child1 = Individual.from_triangles(child_triangles1)
                 child2 = Individual.from_triangles(child_triangles2)
@@ -114,10 +109,16 @@ class Crossover:
                 triangles1 = parent1.get_triangles()
                 triangles2 = parent2.get_triangles()
 
-                mask = np.random.rand(self.amount_of_triangle) < p
+                child_triangles1 = []
+                child_triangles2 = []
 
-                child_triangles1 = np.where(mask[:, None], triangles1, triangles2)
-                child_triangles2 = np.where(mask[:, None], triangles2, triangles1)
+                for i in range(self.amount_of_triangle):
+                    if random.random() < p:
+                        child_triangles1.append(triangles1[i])
+                        child_triangles2.append(triangles2[i])
+                    else:
+                        child_triangles1.append(triangles2[i])
+                        child_triangles2.append(triangles1[i])
 
                 child1 = Individual.from_triangles(child_triangles1)
                 child2 = Individual.from_triangles(child_triangles2)

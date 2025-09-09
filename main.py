@@ -60,10 +60,10 @@ if __name__ == '__main__':
         fitness_obj = Fitness(n_population, target_image)
 
         stop = False
-        generation_count = 0
         start_time = time.time()
+        generation_count = 0
         best_fitness_so_far = 0
-        elite_population_history = []
+        relevant_population_history = []
         stable_structure_generations = 0
         best_fitness_history = []
         stable_content_generations = 0
@@ -115,20 +115,26 @@ if __name__ == '__main__':
             generation_count += 1
 
             if stop_condition == "structure":
-                n_elite = int(n_population_size * stop_condition_structure_percentage)
-                elite_population = sorted(n_population, key=lambda ind: ind.fitness, reverse=True)[:n_elite]
-                elite_population_history.append(elite_population)
+                m_relevant_population = int(n_population_size * stop_condition_structure_percentage)
+                relevant_population = sorted(n_population, key=lambda ind: ind.fitness, reverse=True)[:m_relevant_population]
+                relevant_population_history.append(relevant_population)
 
-                if len(elite_population_history) > stop_condition_structure_generations:
-                    current_avg_fitness = sum(ind.fitness for ind in elite_population_history[-1]) / n_elite
-                    old_avg_fitness = sum(ind.fitness for ind in elite_population_history[0]) / n_elite
+                if len(relevant_population_history) > stop_condition_structure_generations:
+                    old_relevant_population = relevant_population_history[0]
 
-                    if abs(current_avg_fitness - old_avg_fitness) <= stop_condition_structure_delta:
+                    changed_individuals = 0
+                    for i in range(m_relevant_population):
+                        if relevant_population[i].get_triangles() != old_relevant_population[i].get_triangles():
+                            changed_individuals += 1
+
+                    change_percentage = changed_individuals / m_relevant_population
+
+                    if change_percentage <= stop_condition_structure_delta:
                         stable_structure_generations += 1
                     else:
                         stable_structure_generations = 0
 
-                    elite_population_history.pop(0)
+                    relevant_population_history.pop(0)
 
             if stop_condition == "content":
                 current_best_individual = max(n_population, key=lambda ind: ind.fitness)
