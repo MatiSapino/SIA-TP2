@@ -49,19 +49,24 @@ if __name__ == '__main__':
         stop_condition_structure_percentage = config.get("stop_condition_structure_percentage", 0.2)
         stop_condition_structure_delta = config.get("stop_condition_structure_delta", 0.001)
 
-        valid_stop_conditions = ["max_time_seconds", "max_generations", "acceptable_solution", "structure"]
+        stop_condition_content_generations = config.get("stop_condition_content_generations", 10)
+        stop_condition_content_delta = config.get("stop_condition_content_delta", 0.001)
+
+        valid_stop_conditions = ["max_time_seconds", "max_generations", "acceptable_solution", "structure", "content"]
         if stop_condition not in valid_stop_conditions:
             raise ValueError(f"Invalid stop condition: {stop_condition}")
 
         n_population = generate_initial_population(target_image, n_population_size, amount_of_triangle)
         fitness_obj = Fitness(n_population, target_image)
 
+        stop = False
         generation_count = 0
         start_time = time.time()
         best_fitness_so_far = 0
-        stop = False
         elite_population_history = []
-        stable_generations = 0
+        stable_structure_generations = 0
+        best_fitness_history = []
+        stable_content_generations = 0
 
         while not stop:
             selector = Selection(n_population, fitness_obj)
@@ -119,11 +124,26 @@ if __name__ == '__main__':
                     old_avg_fitness = sum(ind.fitness for ind in elite_population_history[0]) / n_elite
 
                     if abs(current_avg_fitness - old_avg_fitness) <= stop_condition_structure_delta:
-                        stable_generations += 1
+                        stable_structure_generations += 1
                     else:
-                        stable_generations = 0
+                        stable_structure_generations = 0
 
                     elite_population_history.pop(0)
+
+            if stop_condition == "content":
+                current_best_individual = max(n_population, key=lambda ind: ind.fitness)
+                best_fitness_so_far = current_best_individual.fitness
+                best_fitness_history.append(best_fitness_so_far)
+
+                if len(best_fitness_history) > stop_condition_content_generations:
+                    current_best_fitness = best_fitness_history[-1]
+                    old_best_fitness = best_fitness_history[0]
+
+                    if abs(current_best_fitness - old_best_fitness) <= stop_condition_content_delta:
+                        stable_content_generations += 1
+                    else:
+                        stable_content_generations = 0
+                    best_fitness_history.pop(0)
 
             if stop_condition == "acceptable_solution":
                 current_best_individual = max(n_population, key=lambda individual: individual.fitness)
@@ -141,7 +161,9 @@ if __name__ == '__main__':
                 stop = True
             elif stop_condition == "acceptable_solution" and best_fitness_so_far >= stop_condition_acceptable_solution:
                 stop = True
-            elif stop_condition == "structure" and stable_generations >= stop_condition_structure_generations:
+            elif stop_condition == "structure" and stable_structure_generations >= stop_condition_structure_generations:
+                stop = True
+            elif stop_condition == "content" and stable_content_generations >= stop_condition_content_generations:
                 stop = True
 
         best_individual = sorted(n_population, key=lambda ind: ind.fitness, reverse=True)[0]
