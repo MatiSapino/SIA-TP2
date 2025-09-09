@@ -1,3 +1,4 @@
+import math
 import random
 
 import numpy as np
@@ -71,7 +72,7 @@ class Crossover:
             size = self.amount_of_triangle
 
             locus_p = random.randint(0, size - 1)
-            size_l = random.randint(0, (size + 1) // 2)
+            size_l = random.randint(0, math.ceil(size / 2))
 
             mask = np.zeros(size, dtype=bool)
             for i in range(size_l):
