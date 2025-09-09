@@ -4,5 +4,6 @@
   "amount_of_triangle": 100,
   "selection_method": "roulette",
   "k_selection_size": 20,
-  "crossover_method": "one_point"
+  "crossover_method": "one_point",
+  "crossover_probability": 1
 }

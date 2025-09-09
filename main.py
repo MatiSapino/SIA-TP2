@@ -16,6 +16,7 @@ if __name__ == '__main__':
         population_size = config["population_size"]
         amount_of_triangle = config["amount_of_triangle"]
         k_selection_size = config["k_selection_size"]
+        crossover_probability = config["crossover_probability"]
 
         population = generate_initial_population(target_image, population_size, amount_of_triangle)
         fitness_obj = Fitness(population, target_image)
@@ -30,7 +31,7 @@ if __name__ == '__main__':
 
         children_size = k_selection_size
         crossover_method = config["crossover_method"]
-        crossover = Crossover(chosen_parents, children_size, amount_of_triangle)
+        crossover = Crossover(chosen_parents, children_size, amount_of_triangle, crossover_probability)
         if hasattr(crossover, crossover_method):
             method = getattr(crossover, crossover_method)
             children = method()
