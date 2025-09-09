@@ -1,7 +1,5 @@
 {
-  "target_image": "src/data/flag.png",
   "n_population_size": 500,
-  "amount_of_triangle": 200,
 
   "selection_method": "deterministic_tournaments",
   "k_selection_size": 250,

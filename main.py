@@ -1,5 +1,5 @@
+import argparse
 import json
-import sys
 import time
 
 import cv2
@@ -10,12 +10,27 @@ from src.population.population import generate_initial_population
 from src.selection.selection import Selection
 
 if __name__ == '__main__':
-    with open(f"{sys.argv[1]}", "r") as file:
+    parser = argparse.ArgumentParser(description='Genetic Algorithm for image recreation.')
+    parser.add_argument('--target-image', type=str, default="./src/data/flag.png", help='Path to the target image.')
+    parser.add_argument('--amount-of-triangles', type=int, default=200, help='Number of triangles.')
+    parser.add_argument('--config-file', type=str, default="./configs/config.json", help='Path to the configuration JSON file.')
+
+    parser_args = parser.parse_args()
+
+    with open(parser_args.config_file, 'r') as file:
         config = json.load(file)
 
-        target_image = cv2.imread(config["target_image"])
+        target_image_path = parser_args.target_image
+        if target_image_path is None:
+            raise ValueError("Target image path is not specified in command line.")
+        target_image = cv2.imread(target_image_path)
+
+        triangles = parser_args.amount_of_triangles
+        if triangles is None:
+            raise ValueError("Amount of triangles is not specified in command line.")
+        amount_of_triangle = triangles
+
         n_population_size = config["n_population_size"]
-        amount_of_triangle = config["amount_of_triangle"]
 
         selection_method = config["selection_method"]
         k_selection_size = config["k_selection_size"]
