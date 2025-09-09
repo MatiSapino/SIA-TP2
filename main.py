@@ -1,5 +1,6 @@
 import json
 import sys
+import time
 
 import cv2
 
@@ -18,75 +19,71 @@ if __name__ == '__main__':
         k_selection_size = config["k_selection_size"]
         crossover_probability = config["crossover_probability"]
         implementation = config["implementation"]
+        stop_condition_max_time_seconds = config["stop_condition_max_time_seconds"]
+        stop_condition_max_generations = config["stop_condition_max_generations"]
 
         n_population = generate_initial_population(target_image, n_population_size, amount_of_triangle)
         fitness_obj = Fitness(n_population, target_image)
 
-        selector = Selection(n_population, fitness_obj)
-        selection_method = config["selection_method"]
-        if hasattr(selector, selection_method):
-            method = getattr(selector, selection_method)
-            k_chosen_parents = method(k_selection_size)
-        else:
-            raise ValueError(f"Invalid {selection_method} selection method")
+        generation_count = 0
+        start_time = time.time()
 
-        k_children_size = k_selection_size
-        crossover_method = config["crossover_method"]
-        crossover = Crossover(k_chosen_parents, k_children_size, amount_of_triangle, crossover_probability)
-        if hasattr(crossover, crossover_method):
-            method = getattr(crossover, crossover_method)
-            k_children = method()
-        else:
-            raise ValueError(f"Invalid {crossover_method} crossover method")
-
-        for individual in k_children:
-            individual.update_fitness(fitness_obj.fitness(individual))
-
-        if implementation == "traditional":
-            combined_population = n_population + k_children
-
-            combined_fitness_obj = Fitness(combined_population, target_image)
-            combined_selector = Selection(combined_population, combined_fitness_obj)
-            method = getattr(combined_selector, selection_method)
-
-            new_population = method(n_population_size)
-
-        elif implementation == "young-bias":
-            if k_children_size > n_population_size:
-                children_fitness_obj = Fitness(k_children, target_image)
-                children_selector = Selection(k_children, children_fitness_obj)
-                method = getattr(children_selector, selection_method)
-                new_population = method(n_population_size)
-            else:
-                new_population = k_children.copy()
-                remaining_population_size = n_population_size - k_children_size
+        while generation_count < stop_condition_max_generations and (time.time() - start_time) < stop_condition_max_time_seconds:
+            selector = Selection(n_population, fitness_obj)
+            selection_method = config["selection_method"]
+            if hasattr(selector, selection_method):
                 method = getattr(selector, selection_method)
-                remaining_population = method(remaining_population_size)
-                new_population.extend(remaining_population)
+                k_chosen_parents = method(k_selection_size)
+            else:
+                raise ValueError(f"Invalid {selection_method} selection method")
 
-        else:
-            raise ValueError(f"Invalid implementation method: {implementation}")
+            k_children_size = k_selection_size
+            crossover_method = config["crossover_method"]
+            crossover = Crossover(k_chosen_parents, k_children_size, amount_of_triangle, crossover_probability)
+            if hasattr(crossover, crossover_method):
+                method = getattr(crossover, crossover_method)
+                k_children = method()
+            else:
+                raise ValueError(f"Invalid {crossover_method} crossover method")
 
-        n_population = new_population
+            if implementation == "traditional":
+                combined_population = n_population + k_children
 
-        generational_breach = sum(1 for individual in n_population if individual in k_children) / n_population_size
-        last_generation_individuals = (1 - generational_breach) * n_population_size
-        individuals_generated = generational_breach * n_population_size
+                combined_fitness_obj = Fitness(combined_population, target_image)
+                combined_selector = Selection(combined_population, combined_fitness_obj)
+                method = getattr(combined_selector, selection_method)
 
-        print("Selected individuals:\n")
-        for individual in k_chosen_parents:
-            print(f"Individual: {individual.get_triangles()} \n")
+                new_population = method(n_population_size)
 
-        print("New population after crossover:\n")
-        for individual in k_children:
-            print(f"Individual: {individual.get_triangles()} \n")
+            elif implementation == "young-bias":
+                if k_children_size > n_population_size:
+                    children_fitness_obj = Fitness(k_children, target_image)
+                    children_selector = Selection(k_children, children_fitness_obj)
+                    method = getattr(children_selector, selection_method)
+                    new_population = method(n_population_size)
+                else:
+                    new_population = k_children.copy()
+                    remaining_population_size = n_population_size - k_children_size
+                    method = getattr(selector, selection_method)
+                    remaining_population = method(remaining_population_size)
+                    new_population.extend(remaining_population)
 
-        print("New population:\n")
-        for individual in n_population:
-            print(f"Individual: {individual.get_triangles()} \n")
+            else:
+                raise ValueError(f"Invalid implementation method: {implementation}")
 
-        print(f"Generational Breach: {generational_breach:.2f}\n")
-        print(f"Last generation individuals: {last_generation_individuals}\n")
-        print(f"Individuals generated: {individuals_generated}\n")
+            n_population = new_population
+            generation_count += 1
 
-        cv2.imwrite("output.png", fitness_obj.render_individual(k_children[0]))
+            if generation_count % 10 == 0:
+                print(f"Generation: {generation_count}, Time passed: {time.time() - start_time:.2f}s")
+
+            generational_breach = sum(1 for individual in n_population if individual in k_children) / n_population_size
+
+            print(f"Generational Breach: {generational_breach:.2f}\n")
+
+        print("\n--- Stop Conditions Reached ---")
+        print(f"Executed Generations: {generation_count}")
+        print(f"Total Time: {time.time() - start_time:.2f} seconds")
+
+        best_individual = sorted(n_population, key=lambda ind: ind.fitness, reverse=True)[0]
+        cv2.imwrite("output.png", fitness_obj.render_individual(best_individual))
