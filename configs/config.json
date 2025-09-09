@@ -22,5 +22,9 @@
 
   "stop_condition_max_time_seconds": 30000,
   "stop_condition_max_generations": 200,
-  "stop_condition_acceptable_solution": 0.95
+  "stop_condition_acceptable_solution": 0.95,
+
+  "stop_condition_structure_generations": 3,
+  "stop_condition_structure_percentage": 0.2,
+  "stop_condition_structure_delta": 0.1
 }

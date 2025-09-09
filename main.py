@@ -45,7 +45,11 @@ if __name__ == '__main__':
         stop_condition_max_generations = config.get("stop_condition_max_generations", float('inf'))
         stop_condition_acceptable_solution = config.get("stop_condition_acceptable_solution", 1.0)
 
-        valid_stop_conditions = ["max_time_seconds", "max_generations", "acceptable_solution"]
+        stop_condition_structure_generations = config.get("stop_condition_structure_generations", 10)
+        stop_condition_structure_percentage = config.get("stop_condition_structure_percentage", 0.2)
+        stop_condition_structure_delta = config.get("stop_condition_structure_delta", 0.001)
+
+        valid_stop_conditions = ["max_time_seconds", "max_generations", "acceptable_solution", "structure"]
         if stop_condition not in valid_stop_conditions:
             raise ValueError(f"Invalid stop condition: {stop_condition}")
 
@@ -56,6 +60,8 @@ if __name__ == '__main__':
         start_time = time.time()
         best_fitness_so_far = 0
         stop = False
+        elite_population_history = []
+        stable_generations = 0
 
         while not stop:
             selector = Selection(n_population, fitness_obj)
@@ -103,6 +109,22 @@ if __name__ == '__main__':
             n_population = new_population
             generation_count += 1
 
+            if stop_condition == "structure":
+                n_elite = int(n_population_size * stop_condition_structure_percentage)
+                elite_population = sorted(n_population, key=lambda ind: ind.fitness, reverse=True)[:n_elite]
+                elite_population_history.append(elite_population)
+
+                if len(elite_population_history) > stop_condition_structure_generations:
+                    current_avg_fitness = sum(ind.fitness for ind in elite_population_history[-1]) / n_elite
+                    old_avg_fitness = sum(ind.fitness for ind in elite_population_history[0]) / n_elite
+
+                    if abs(current_avg_fitness - old_avg_fitness) <= stop_condition_structure_delta:
+                        stable_generations += 1
+                    else:
+                        stable_generations = 0
+
+                    elite_population_history.pop(0)
+
             if stop_condition == "acceptable_solution":
                 current_best_individual = max(n_population, key=lambda individual: individual.fitness)
                 best_fitness_so_far = current_best_individual.fitness
@@ -119,10 +141,12 @@ if __name__ == '__main__':
                 stop = True
             elif stop_condition == "acceptable_solution" and best_fitness_so_far >= stop_condition_acceptable_solution:
                 stop = True
+            elif stop_condition == "structure" and stable_generations >= stop_condition_structure_generations:
+                stop = True
 
         best_individual = sorted(n_population, key=lambda ind: ind.fitness, reverse=True)[0]
 
-        print("\n--- Stop Conditions Reached ---")
+        print("\n--- Stop Condition Reached ---")
         print(f"Executed Generations: {generation_count}")
         print(f"Total Time: {time.time() - start_time:.2f} seconds")
         print(f"Best Fitness: {best_individual.fitness:.4f}")
