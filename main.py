@@ -13,37 +13,72 @@ if __name__ == '__main__':
         config = json.load(file)
 
         target_image = cv2.imread(config["target_image"])
-        population_size = config["population_size"]
+        n_population_size = config["n_population_size"]
         amount_of_triangle = config["amount_of_triangle"]
         k_selection_size = config["k_selection_size"]
         crossover_probability = config["crossover_probability"]
+        implementation = config["implementation"]
 
-        population = generate_initial_population(target_image, population_size, amount_of_triangle)
-        fitness_obj = Fitness(population, target_image)
+        n_population = generate_initial_population(target_image, n_population_size, amount_of_triangle)
+        fitness_obj = Fitness(n_population, target_image)
 
-        selector = Selection(population, fitness_obj)
+        selector = Selection(n_population, fitness_obj)
         selection_method = config["selection_method"]
         if hasattr(selector, selection_method):
             method = getattr(selector, selection_method)
-            chosen_parents = method(k_selection_size)
+            k_chosen_parents = method(k_selection_size)
         else:
             raise ValueError(f"Invalid {selection_method} selection method")
 
-        children_size = k_selection_size
+        k_children_size = k_selection_size
         crossover_method = config["crossover_method"]
-        crossover = Crossover(chosen_parents, children_size, amount_of_triangle, crossover_probability)
+        crossover = Crossover(k_chosen_parents, k_children_size, amount_of_triangle, crossover_probability)
         if hasattr(crossover, crossover_method):
             method = getattr(crossover, crossover_method)
-            children = method()
+            k_children = method()
         else:
             raise ValueError(f"Invalid {crossover_method} crossover method")
 
+        for individual in k_children:
+            individual.update_fitness(fitness_obj.fitness(individual))
+
+        if implementation == "traditional":
+            combined_population = n_population + k_children
+
+            combined_fitness_obj = Fitness(combined_population, target_image)
+            combined_selector = Selection(combined_population, combined_fitness_obj)
+            method = getattr(combined_selector, selection_method)
+
+            new_population = method(n_population_size)
+
+        elif implementation == "young-bias":
+            if k_children_size > n_population_size:
+                children_fitness_obj = Fitness(k_children, target_image)
+                children_selector = Selection(k_children, children_fitness_obj)
+                method = getattr(children_selector, selection_method)
+                new_population = method(n_population_size)
+            else:
+                new_population = k_children.copy()
+                remaining_population_size = n_population_size - k_children_size
+                method = getattr(selector, selection_method)
+                remaining_population = method(remaining_population_size)
+                new_population.extend(remaining_population)
+
+        else:
+            raise ValueError(f"Invalid implementation method: {implementation}")
+
+        n_population = new_population
+
         print("Selected individuals:\n")
-        for individual in chosen_parents:
+        for individual in k_chosen_parents:
             print(f"Individual: {individual.get_triangles()} \n")
 
         print("New population after crossover:\n")
-        for individual in children:
+        for individual in k_children:
             print(f"Individual: {individual.get_triangles()} \n")
 
-        cv2.imwrite("output.png", fitness_obj.render_individual(children[0]))
+        print("New population:\n")
+        for individual in n_population:
+            print(f"Individual: {individual.get_triangles()} \n")
+
+        cv2.imwrite("output.png", fitness_obj.render_individual(k_children[0]))

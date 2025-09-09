@@ -1,9 +1,10 @@
 {
   "target_image": "src/data/flag.png",
-  "population_size": 100,
+  "n_population_size": 100,
   "amount_of_triangle": 100,
   "selection_method": "roulette",
   "k_selection_size": 20,
   "crossover_method": "one_point",
-  "crossover_probability": 1
+  "crossover_probability": 1,
+  "implementation": "traditional"
 }
