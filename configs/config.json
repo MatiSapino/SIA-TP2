@@ -16,8 +16,8 @@
   "crossover_probability": 1,
   "p_uniform": 0.9,
 
-  "implementation": "young-bias",
+  "implementation": "traditional",
 
-  "stop_condition_max_time_seconds": 3000000000000000000000000000,
-  "stop_condition_max_generations": 2500
+  "stop_condition_max_time_seconds": 30000,
+  "stop_condition_max_generations": 200
 }

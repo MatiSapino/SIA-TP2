@@ -53,8 +53,8 @@ if __name__ == '__main__':
             selector = Selection(n_population, fitness_obj)
             if hasattr(selector, selection_method):
                 method = getattr(selector, selection_method)
-                args = selection_method_args.get(selection_method, [])
-                k_chosen_parents = method(k_selection_size, *args)
+                selection_args = selection_method_args.get(selection_method, [])
+                k_chosen_parents = method(k_selection_size, *selection_args)
             else:
                 raise ValueError(f"Invalid {selection_method} selection method")
 
@@ -62,8 +62,8 @@ if __name__ == '__main__':
             crossover = Crossover(k_chosen_parents, k_children_size, amount_of_triangle, crossover_probability)
             if hasattr(crossover, crossover_method):
                 method = getattr(crossover, crossover_method)
-                args = crossover_method_args.get(crossover_method, [])
-                k_children = method(*args)
+                crossover_args = crossover_method_args.get(crossover_method, [])
+                k_children = method(*crossover_args)
             else:
                 raise ValueError(f"Invalid {crossover_method} crossover method")
 
@@ -74,19 +74,19 @@ if __name__ == '__main__':
                 combined_selector = Selection(combined_population, combined_fitness_obj)
                 method = getattr(combined_selector, selection_method)
 
-                new_population = method(n_population_size)
+                new_population = method(n_population_size, *selection_args)
 
             elif implementation == "young-bias":
                 if k_children_size > n_population_size:
                     children_fitness_obj = Fitness(k_children, target_image)
                     children_selector = Selection(k_children, children_fitness_obj)
                     method = getattr(children_selector, selection_method)
-                    new_population = method(n_population_size)
+                    new_population = method(n_population_size, *selection_args)
                 else:
                     new_population = k_children.copy()
                     remaining_population_size = n_population_size - k_children_size
                     method = getattr(selector, selection_method)
-                    remaining_population = method(remaining_population_size)
+                    remaining_population = method(remaining_population_size, *selection_args)
                     new_population.extend(remaining_population)
 
             else:
