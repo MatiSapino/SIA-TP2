@@ -1,12 +1,23 @@
 {
   "target_image": "src/data/flag.png",
-  "n_population_size": 1000,
-  "amount_of_triangle": 1000,
-  "selection_method": "roulette",
-  "k_selection_size": 750,
-  "crossover_method": "one_point",
+  "n_population_size": 500,
+  "amount_of_triangle": 200,
+
+  "selection_method": "deterministic_tournaments",
+  "k_selection_size": 250,
+  "temperature_c": 10,
+  "temperature_0": 10,
+  "k_constant": 5,
+  "t_generation": 5,
+  "m_selection_size": 100,
+  "threshold": 0.75,
+
+  "crossover_method": "annular",
   "crossover_probability": 1,
-  "implementation": "traditional",
-  "stop_condition_max_time_seconds": 300,
-  "stop_condition_max_generations": 50
+  "p_uniform": 0.9,
+
+  "implementation": "young-bias",
+
+  "stop_condition_max_time_seconds": 3000000000000000000000000000,
+  "stop_condition_max_generations": 2500
 }

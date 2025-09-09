@@ -16,9 +16,30 @@ if __name__ == '__main__':
         target_image = cv2.imread(config["target_image"])
         n_population_size = config["n_population_size"]
         amount_of_triangle = config["amount_of_triangle"]
+
+        selection_method = config["selection_method"]
         k_selection_size = config["k_selection_size"]
+        temperature_c = config["temperature_c"]
+        temperature_0 = config["temperature_0"]
+        k_constant = config["k_constant"]
+        t_generation = config["t_generation"]
+        m_selection_size = config["m_selection_size"]
+        threshold = config["threshold"]
+        selection_method_args = {
+            "boltzmann": [temperature_c, temperature_0, k_constant, t_generation],
+            "deterministic_tournaments": [m_selection_size],
+            "probabilistic_tournaments": [threshold]
+        }
+
+        crossover_method = config["crossover_method"]
         crossover_probability = config["crossover_probability"]
+        p_uniform = config["p_uniform"]
+        crossover_method_args = {
+            "uniform": [p_uniform]
+        }
+
         implementation = config["implementation"]
+
         stop_condition_max_time_seconds = config["stop_condition_max_time_seconds"]
         stop_condition_max_generations = config["stop_condition_max_generations"]
 
@@ -30,19 +51,19 @@ if __name__ == '__main__':
 
         while generation_count < stop_condition_max_generations and (time.time() - start_time) < stop_condition_max_time_seconds:
             selector = Selection(n_population, fitness_obj)
-            selection_method = config["selection_method"]
             if hasattr(selector, selection_method):
                 method = getattr(selector, selection_method)
-                k_chosen_parents = method(k_selection_size)
+                args = selection_method_args.get(selection_method, [])
+                k_chosen_parents = method(k_selection_size, *args)
             else:
                 raise ValueError(f"Invalid {selection_method} selection method")
 
             k_children_size = k_selection_size
-            crossover_method = config["crossover_method"]
             crossover = Crossover(k_chosen_parents, k_children_size, amount_of_triangle, crossover_probability)
             if hasattr(crossover, crossover_method):
                 method = getattr(crossover, crossover_method)
-                k_children = method()
+                args = crossover_method_args.get(crossover_method, [])
+                k_children = method(*args)
             else:
                 raise ValueError(f"Invalid {crossover_method} crossover method")
 
