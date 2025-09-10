@@ -54,11 +54,11 @@ if __name__ == '__main__':
             "uniform": [p_uniform]
         }
 
-        implementation = config["implementation"]
-
         mutation_method = config.get("mutation_method", "gene")
         mutation_probability = config.get("mutation_probability", 0.05)
         mutation_M = config.get("mutation_M", None)
+
+        implementation = config["implementation"]
 
         stop_condition = config["stop_condition"]
         stop_condition_max_time_seconds = config.get("stop_condition_max_time_seconds", float('inf'))
