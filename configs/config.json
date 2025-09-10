@@ -14,12 +14,16 @@
   "crossover_probability": 1,
   "p_uniform": 0.9,
 
+  "mutation_method": "multigen_uniform",
+  "mutation_probability": 0.05,
+  "mutation_M": 5,
+
   "implementation": "traditional",
 
-  "stop_condition": "max_time_seconds",
+  "stop_condition": "max_generations",
 
-  "stop_condition_max_time_seconds": 30000,
-  "stop_condition_max_generations": 200,
+  "stop_condition_max_time_seconds": 3000,
+  "stop_condition_max_generations": 10,
   "stop_condition_acceptable_solution": 0.95,
 
   "stop_condition_structure_generations": 3,

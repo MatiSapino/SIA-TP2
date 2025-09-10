@@ -8,6 +8,7 @@ from src.crossover.crossover import Crossover
 from src.fitness.fitness import Fitness
 from src.population.population import generate_initial_population
 from src.selection.selection import Selection
+from src.mutation.mutation import Mutation
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Genetic Algorithm for image recreation.')
@@ -55,6 +56,10 @@ if __name__ == '__main__':
 
         implementation = config["implementation"]
 
+        mutation_method = config.get("mutation_method", "gene")
+        mutation_probability = config.get("mutation_probability", 0.05)
+        mutation_M = config.get("mutation_M", None)
+
         stop_condition = config["stop_condition"]
         stop_condition_max_time_seconds = config.get("stop_condition_max_time_seconds", float('inf'))
         stop_condition_max_generations = config.get("stop_condition_max_generations", float('inf'))
@@ -101,13 +106,19 @@ if __name__ == '__main__':
             else:
                 raise ValueError(f"Invalid {crossover_method} crossover method")
 
+            mutation_obj = Mutation(mutation_probability, target_image, mutation_M)
+            if hasattr(mutation_obj, mutation_method):
+                mutation_func = getattr(mutation_obj, mutation_method)
+                for child in k_children:
+                    mutation_func(child)
+            else:
+                raise ValueError(f"Invalid mutation method: {mutation_method}")
+
             if implementation == "traditional":
                 combined_population = n_population + k_children
-
                 combined_fitness_obj = Fitness(combined_population, target_image)
                 combined_selector = Selection(combined_population, combined_fitness_obj)
                 method = getattr(combined_selector, selection_method)
-
                 new_population = method(n_population_size, *selection_args)
 
             elif implementation == "young-bias":
