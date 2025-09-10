@@ -10,15 +10,15 @@ class Mutation:
         self.mutation_m = mutation_m
 
     def mutate_vertex(self, triangle):
-        while True:
-            triangle_points = [
-                (random.randint(0, self.width - 1), random.randint(0, self.height - 1)),
-                (random.randint(0, self.width - 1), random.randint(0, self.height - 1)),
-                (random.randint(0, self.width - 1), random.randint(0, self.height - 1)),
-            ]
-            if len(set(triangle_points)) == 3:
-                break
-        triangle.gen_triangle = tuple(triangle_points)
+        points = list(triangle.gen_triangle)
+        idx = random.randint(0, 2)
+        new_point = (random.randint(0, self.width - 1), random.randint(0, self.height - 1))
+        points[idx] = new_point
+
+        if len(set(points)) == 3:
+            triangle.gen_triangle = tuple(points)
+        else:
+            pass
 
     def gene(self, individual):
         if random.random() < self.mutation_probability:
@@ -62,8 +62,16 @@ class Mutation:
 
     @staticmethod
     def mutate_color(triangle):
-        r = random.randint(0, 255)
-        g = random.randint(0, 255)
-        b = random.randint(0, 255)
-        a = random.randint(0, 255)
+        r, g, b, a = triangle.gen_color
+
+        r = (r + random.randint(-10, 10)) % 256
+        g = (g + random.randint(-10, 10)) % 256
+        b = (b + random.randint(-10, 10)) % 256
+        a = (a + random.randint(-10, 10)) % 256
+
+        r = max(0, min(255, r))
+        g = max(0, min(255, g))
+        b = max(0, min(255, b))
+        a = max(0, min(255, a))
+
         triangle.gen_color = (r, g, b, a)

@@ -9,13 +9,20 @@ class Fitness:
     def __init__(self, population, target_image):
         self.population = population
         self.target_image = target_image
+        self.target_lab = cv2.cvtColor(target_image, cv2.COLOR_BGR2LAB)
 
     def fitness(self, individual: Individual):
         if individual.fitness is not None:
             return individual.fitness
-        generated = self.render_individual(individual)
-        error = float(np.mean((self.target_image - generated) ** 2))
-        fitness = 1 / (1 + error)
+
+        generated_brg = self.render_individual(individual)
+        generated_lab = cv2.cvtColor(generated_brg, cv2.COLOR_BGR2LAB)
+
+        lab_diff = np.abs(self.target_lab.astype("float") - generated_lab.astype("float"))
+        error = np.mean(lab_diff)
+
+        fitness = 1.0 / (1.0 + error)
+
         individual.update_fitness(fitness)
         return fitness
 

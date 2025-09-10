@@ -187,6 +187,10 @@ if __name__ == '__main__':
             generational_breach = sum(1 for individual in n_population if individual in k_children) / n_population_size
             print(f"Generational Breach: {generational_breach:.2f}\n")
 
+            current_best_individual = max(n_population, key=lambda individual: fitness_obj.fitness(individual))
+            best_fitness_so_far = fitness_obj.fitness(current_best_individual)
+            print(f"Generation Best Fitness: {best_fitness_so_far:.2f}\n")
+
             if stop_condition == "max_time_seconds" and (time.time() - start_time) >= stop_condition_max_time_seconds:
                 stop = True
             elif stop_condition == "max_generations" and generation_count >= stop_condition_max_generations:

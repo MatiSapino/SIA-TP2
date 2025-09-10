@@ -1,3 +1,4 @@
+import copy
 import math
 import random
 
@@ -83,11 +84,11 @@ class Crossover:
                 for i in range(size):
                     is_in_annulus = ((i - locus_p + size) % size) < size_l
                     if is_in_annulus:
-                        child_triangles1.append(triangles2[i])
-                        child_triangles2.append(triangles1[i])
+                        child_triangles1.append(copy.copy(triangles2[i]))
+                        child_triangles2.append(copy.copy(triangles1[i]))
                     else:
-                        child_triangles1.append(triangles1[i])
-                        child_triangles2.append(triangles2[i])
+                        child_triangles1.append(copy.copy(triangles1[i]))
+                        child_triangles2.append(copy.copy(triangles2[i]))
 
                 child1 = Individual.from_triangles(child_triangles1)
                 child2 = Individual.from_triangles(child_triangles2)
@@ -114,11 +115,11 @@ class Crossover:
 
                 for i in range(self.amount_of_triangle):
                     if random.random() < p:
-                        child_triangles1.append(triangles1[i])
-                        child_triangles2.append(triangles2[i])
+                        child_triangles1.append(copy.copy(triangles1[i]))
+                        child_triangles2.append(copy.copy(triangles2[i]))
                     else:
-                        child_triangles1.append(triangles2[i])
-                        child_triangles2.append(triangles1[i])
+                        child_triangles1.append(copy.copy(triangles2[i]))
+                        child_triangles2.append(copy.copy(triangles1[i]))
 
                 child1 = Individual.from_triangles(child_triangles1)
                 child2 = Individual.from_triangles(child_triangles2)
