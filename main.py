@@ -183,6 +183,8 @@ if __name__ == '__main__':
 
             if generation_count % 10 == 0:
                 print(f"Generation: {generation_count}, Time passed: {time.time() - start_time:.2f}s")
+                best_individual_so_far = sorted(n_population, key=lambda ind: ind.fitness, reverse=True)[0]
+                cv2.imwrite("output.png", fitness_obj.render_individual(best_individual_so_far))
 
             generational_breach = sum(1 for individual in n_population if individual in k_children) / n_population_size
             print(f"Generational Breach: {generational_breach:.2f}\n")
