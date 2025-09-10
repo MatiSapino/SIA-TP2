@@ -9,7 +9,6 @@ class Mutation:
 		self.M = M
 
 	def mutate_color(self, triangle):
-		print("Mutating color")
 		r = random.randint(0, 255)
 		g = random.randint(0, 255)
 		b = random.randint(0, 255)
@@ -25,7 +24,6 @@ class Mutation:
 			]
 			if len(set(triangle_points)) == 3:
 				break
-		print("Mutating vertex")
 		triangle.gen_triangle = tuple(triangle_points)
 
 	def gene(self, individual):

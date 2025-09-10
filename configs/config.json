@@ -10,7 +10,7 @@
   "m_selection_size": 100,
   "threshold": 0.75,
 
-  "crossover_method": "annular",
+  "crossover_method": "uniform",
   "crossover_probability": 1,
   "p_uniform": 0.9,
 
@@ -20,10 +20,10 @@
 
   "implementation": "traditional",
 
-  "stop_condition": "max_generations",
+  "stop_condition": "max_time_seconds",
 
-  "stop_condition_max_time_seconds": 3000,
-  "stop_condition_max_generations": 10,
+  "stop_condition_max_time_seconds": 5000,
+  "stop_condition_max_generations": 500,
   "stop_condition_acceptable_solution": 0.95,
 
   "stop_condition_structure_generations": 3,
