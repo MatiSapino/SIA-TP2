@@ -19,7 +19,7 @@ class Fitness:
         generated_lab = cv2.cvtColor(generated_brg, cv2.COLOR_BGR2LAB)
 
         lab_diff = np.abs(self.target_lab.astype("float") - generated_lab.astype("float"))
-        error = np.mean(lab_diff)
+        error = float(np.mean(lab_diff))
 
         fitness = 1.0 / (1.0 + error)
 
@@ -42,7 +42,7 @@ class Fitness:
             points = np.array(triangle.gen_triangle, np.int32).reshape((-1, 1, 2))
 
             triangle_layer = canvas.copy()
-            cv2.fillPoly(triangle_layer, [points], (r, g, b))
+            cv2.fillPoly(triangle_layer, [points], (b, g, r))
 
             canvas = cv2.addWeighted(triangle_layer, alpha, canvas, 1 - alpha, 0)
 

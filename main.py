@@ -205,10 +205,33 @@ if __name__ == '__main__':
                 stop = True
 
         best_individual = sorted(n_population, key=lambda ind: ind.fitness, reverse=True)[0]
+        error = (1.0 / best_individual.fitness) - 1.0
 
         print("\n--- Stop Condition Reached ---")
         print(f"Executed Generations: {generation_count}")
         print(f"Total Time: {time.time() - start_time:.2f} seconds")
         print(f"Best Fitness: {best_individual.fitness:.4f}")
+        print(f"Error: {error:.4f}")
 
         cv2.imwrite("output.png", fitness_obj.render_individual(best_individual))
+
+        def create_svg_from_individual(individual, filename="output.svg"):
+            img_width = target_image.shape[1]
+            img_height = target_image.shape[0]
+            svg_content = f'<svg width="{img_width}" height="{img_height}" xmlns="http://www.w3.org/2000/svg">\n'
+
+            genotypes = individual.get_triangles()
+            for index, genotype in enumerate(genotypes):
+                r, g, b, a = genotype.gen_color
+                rgb_color = f'rgb({r}, {g}, {b})'
+                alpha_opacity = a / 255.0
+
+                p1, p2, p3 = genotype.gen_triangle
+                svg_content += f'  <polygon points="{p1[0]},{p1[1]} {p2[0]},{p2[1]} {p3[0]},{p3[1]}" fill="{rgb_color}" fill-opacity="{alpha_opacity:.2f}" />\n'
+
+            svg_content += '</svg>'
+
+            with open(filename, 'w') as f:
+                f.write(svg_content)
+
+        create_svg_from_individual(best_individual)
