@@ -1,4 +1,5 @@
 import argparse
+import csv
 import json
 import time
 
@@ -14,7 +15,9 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Genetic Algorithm for image recreation.')
     parser.add_argument('--target-image', type=str, default="./src/data/flag.png", help='Path to the target image.')
     parser.add_argument('--amount-of-triangles', type=int, default=200, help='Number of triangles.')
-    parser.add_argument('--config-file', type=str, default="./configs/config.json", help='Path to the configuration JSON file.')
+    parser.add_argument('--config-file', type=str, default="./configs/config.json",
+                        help='Path to the configuration JSON file.')
+    parser.add_argument('--target-csv', type=str, default="./fitnessEvolution.csv", help='Path to the fitness evolution data CSV file.')
 
     parser_args = parser.parse_args()
 
@@ -87,122 +90,127 @@ if __name__ == '__main__':
         stable_structure_generations = 0
         best_fitness_history = []
         stable_content_generations = 0
-
-        while not stop:
-            selector = Selection(n_population, fitness_obj)
-            if hasattr(selector, selection_method):
-                method = getattr(selector, selection_method)
-                selection_args = selection_method_args.get(selection_method, [])
-                k_chosen_parents = method(k_selection_size, *selection_args)
-            else:
-                raise ValueError(f"Invalid {selection_method} selection method")
-
-            k_children_size = k_selection_size
-            crossover = Crossover(k_chosen_parents, k_children_size, amount_of_triangle, crossover_probability)
-            if hasattr(crossover, crossover_method):
-                method = getattr(crossover, crossover_method)
-                crossover_args = crossover_method_args.get(crossover_method, [])
-                k_children = method(*crossover_args)
-            else:
-                raise ValueError(f"Invalid {crossover_method} crossover method")
-
-            mutation_obj = Mutation(mutation_probability, target_image, mutation_M)
-            if hasattr(mutation_obj, mutation_method):
-                mutation_func = getattr(mutation_obj, mutation_method)
-                for child in k_children:
-                    mutation_func(child)
-            else:
-                raise ValueError(f"Invalid mutation method: {mutation_method}")
-
-            if implementation == "traditional":
-                combined_population = n_population + k_children
-                combined_fitness_obj = Fitness(combined_population, target_image)
-                combined_selector = Selection(combined_population, combined_fitness_obj)
-                method = getattr(combined_selector, selection_method)
-                new_population = method(n_population_size, *selection_args)
-
-            elif implementation == "young-bias":
-                if k_children_size > n_population_size:
-                    children_fitness_obj = Fitness(k_children, target_image)
-                    children_selector = Selection(k_children, children_fitness_obj)
-                    method = getattr(children_selector, selection_method)
-                    new_population = method(n_population_size, *selection_args)
-                else:
-                    new_population = k_children.copy()
-                    remaining_population_size = n_population_size - k_children_size
+        with open(parser_args.target_csv, mode="w", newline="") as csv_file:
+            writer = csv.writer(csv_file)
+            writer.writerow(["Generacion", "Fitness_Max", "Generational Breach"])
+            while not stop:
+                selector = Selection(n_population, fitness_obj)
+                if hasattr(selector, selection_method):
                     method = getattr(selector, selection_method)
-                    remaining_population = method(remaining_population_size, *selection_args)
-                    new_population.extend(remaining_population)
+                    selection_args = selection_method_args.get(selection_method, [])
+                    k_chosen_parents = method(k_selection_size, *selection_args)
+                else:
+                    raise ValueError(f"Invalid {selection_method} selection method")
 
-            else:
-                raise ValueError(f"Invalid implementation method: {implementation}")
+                k_children_size = k_selection_size
+                crossover = Crossover(k_chosen_parents, k_children_size, amount_of_triangle, crossover_probability)
+                if hasattr(crossover, crossover_method):
+                    method = getattr(crossover, crossover_method)
+                    crossover_args = crossover_method_args.get(crossover_method, [])
+                    k_children = method(*crossover_args)
+                else:
+                    raise ValueError(f"Invalid {crossover_method} crossover method")
 
-            n_population = new_population
-            generation_count += 1
+                mutation_obj = Mutation(mutation_probability, target_image, mutation_M)
+                if hasattr(mutation_obj, mutation_method):
+                    mutation_func = getattr(mutation_obj, mutation_method)
+                    for child in k_children:
+                        mutation_func(child)
+                else:
+                    raise ValueError(f"Invalid mutation method: {mutation_method}")
 
-            if stop_condition == "structure":
-                m_relevant_population = int(n_population_size * stop_condition_structure_percentage)
-                relevant_population = sorted(n_population, key=lambda ind: ind.fitness, reverse=True)[:m_relevant_population]
-                relevant_population_history.append(relevant_population)
+                if implementation == "traditional":
+                    combined_population = n_population + k_children
+                    combined_fitness_obj = Fitness(combined_population, target_image)
+                    combined_selector = Selection(combined_population, combined_fitness_obj)
+                    method = getattr(combined_selector, selection_method)
+                    new_population = method(n_population_size, *selection_args)
 
-                if len(relevant_population_history) > stop_condition_structure_generations:
-                    old_relevant_population = relevant_population_history[0]
-
-                    changed_individuals = 0
-                    for i in range(m_relevant_population):
-                        if relevant_population[i].get_triangles() != old_relevant_population[i].get_triangles():
-                            changed_individuals += 1
-
-                    change_percentage = changed_individuals / m_relevant_population
-
-                    if change_percentage <= stop_condition_structure_delta:
-                        stable_structure_generations += 1
+                elif implementation == "young-bias":
+                    if k_children_size > n_population_size:
+                        children_fitness_obj = Fitness(k_children, target_image)
+                        children_selector = Selection(k_children, children_fitness_obj)
+                        method = getattr(children_selector, selection_method)
+                        new_population = method(n_population_size, *selection_args)
                     else:
-                        stable_structure_generations = 0
+                        new_population = k_children.copy()
+                        remaining_population_size = n_population_size - k_children_size
+                        method = getattr(selector, selection_method)
+                        remaining_population = method(remaining_population_size, *selection_args)
+                        new_population.extend(remaining_population)
 
-                    relevant_population_history.pop(0)
+                else:
+                    raise ValueError(f"Invalid implementation method: {implementation}")
 
-            if stop_condition == "content":
-                current_best_individual = max(n_population, key=lambda ind: ind.fitness)
-                best_fitness_so_far = current_best_individual.fitness
-                best_fitness_history.append(best_fitness_so_far)
+                n_population = new_population
+                generation_count += 1
 
-                if len(best_fitness_history) > stop_condition_content_generations:
-                    current_best_fitness = best_fitness_history[-1]
-                    old_best_fitness = best_fitness_history[0]
+                if stop_condition == "structure":
+                    m_relevant_population = int(n_population_size * stop_condition_structure_percentage)
+                    relevant_population = sorted(n_population, key=lambda ind: ind.fitness, reverse=True)[
+                        :m_relevant_population]
+                    relevant_population_history.append(relevant_population)
 
-                    if abs(current_best_fitness - old_best_fitness) <= stop_condition_content_delta:
-                        stable_content_generations += 1
-                    else:
-                        stable_content_generations = 0
-                    best_fitness_history.pop(0)
+                    if len(relevant_population_history) > stop_condition_structure_generations:
+                        old_relevant_population = relevant_population_history[0]
 
-            if stop_condition == "acceptable_solution":
-                current_best_individual = max(n_population, key=lambda individual: individual.fitness)
-                best_fitness_so_far = current_best_individual.fitness
+                        changed_individuals = 0
+                        for i in range(m_relevant_population):
+                            if relevant_population[i].get_triangles() != old_relevant_population[i].get_triangles():
+                                changed_individuals += 1
 
-            if generation_count % 10 == 0:
-                print(f"Generation: {generation_count}, Time passed: {time.time() - start_time:.2f}s")
-                best_individual_so_far = sorted(n_population, key=lambda ind: ind.fitness, reverse=True)[0]
-                cv2.imwrite("output.png", fitness_obj.render_individual(best_individual_so_far))
+                        change_percentage = changed_individuals / m_relevant_population
 
-            generational_breach = sum(1 for individual in n_population if individual in k_children) / n_population_size
-            print(f"Generational Breach: {generational_breach:.2f}\n")
+                        if change_percentage <= stop_condition_structure_delta:
+                            stable_structure_generations += 1
+                        else:
+                            stable_structure_generations = 0
 
-            current_best_individual = max(n_population, key=lambda individual: fitness_obj.fitness(individual))
-            best_fitness_so_far = fitness_obj.fitness(current_best_individual)
-            print(f"Generation Best Fitness: {best_fitness_so_far:.2f}\n")
+                        relevant_population_history.pop(0)
 
-            if stop_condition == "max_time_seconds" and (time.time() - start_time) >= stop_condition_max_time_seconds:
-                stop = True
-            elif stop_condition == "max_generations" and generation_count >= stop_condition_max_generations:
-                stop = True
-            elif stop_condition == "acceptable_solution" and best_fitness_so_far >= stop_condition_acceptable_solution:
-                stop = True
-            elif stop_condition == "structure" and stable_structure_generations >= stop_condition_structure_generations:
-                stop = True
-            elif stop_condition == "content" and stable_content_generations >= stop_condition_content_generations:
-                stop = True
+                if stop_condition == "content":
+                    current_best_individual = max(n_population, key=lambda ind: ind.fitness)
+                    best_fitness_so_far = current_best_individual.fitness
+                    best_fitness_history.append(best_fitness_so_far)
+
+                    if len(best_fitness_history) > stop_condition_content_generations:
+                        current_best_fitness = best_fitness_history[-1]
+                        old_best_fitness = best_fitness_history[0]
+
+                        if abs(current_best_fitness - old_best_fitness) <= stop_condition_content_delta:
+                            stable_content_generations += 1
+                        else:
+                            stable_content_generations = 0
+                        best_fitness_history.pop(0)
+
+                if stop_condition == "acceptable_solution":
+                    current_best_individual = max(n_population, key=lambda individual: individual.fitness)
+                    best_fitness_so_far = current_best_individual.fitness
+
+                if generation_count % 10 == 0:
+                    print(f"Generation: {generation_count}, Time passed: {time.time() - start_time:.2f}s")
+                    best_individual_so_far = sorted(n_population, key=lambda ind: ind.fitness, reverse=True)[0]
+                    cv2.imwrite("output.png", fitness_obj.render_individual(best_individual_so_far))
+
+                generational_breach = sum(
+                    1 for individual in n_population if individual in k_children) / n_population_size
+                print(f"Generational Breach: {generational_breach:.2f}\n")
+
+                current_best_individual = max(n_population, key=lambda individual: fitness_obj.fitness(individual))
+                best_fitness_so_far = fitness_obj.fitness(current_best_individual)
+                print(f"Generation Best Fitness: {best_fitness_so_far:.2f}\n")
+                writer.writerow([generation_count, best_fitness_so_far, generational_breach])
+                if stop_condition == "max_time_seconds" and (
+                        time.time() - start_time) >= stop_condition_max_time_seconds:
+                    stop = True
+                elif stop_condition == "max_generations" and generation_count >= stop_condition_max_generations:
+                    stop = True
+                elif stop_condition == "acceptable_solution" and best_fitness_so_far >= stop_condition_acceptable_solution:
+                    stop = True
+                elif stop_condition == "structure" and stable_structure_generations >= stop_condition_structure_generations:
+                    stop = True
+                elif stop_condition == "content" and stable_content_generations >= stop_condition_content_generations:
+                    stop = True
 
         best_individual = sorted(n_population, key=lambda ind: ind.fitness, reverse=True)[0]
         error = (1.0 / best_individual.fitness) - 1.0
@@ -214,6 +222,7 @@ if __name__ == '__main__':
         print(f"Error: {error:.4f}")
 
         cv2.imwrite("output.png", fitness_obj.render_individual(best_individual))
+
 
         def create_svg_from_individual(individual, filename="output.svg"):
             img_width = target_image.shape[1]
@@ -233,5 +242,6 @@ if __name__ == '__main__':
 
             with open(filename, 'w') as f:
                 f.write(svg_content)
+
 
         create_svg_from_individual(best_individual)
