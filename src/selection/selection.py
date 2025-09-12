@@ -12,21 +12,24 @@ class Selection:
     def elite(self, k_selection_size):
         n_population_size = len(self.population)
 
-        fitness_list = [(individual, self.fitness_obj.fitness(individual)) for individual in self.population]
+        # fitness_list = [(individual, self.fitness_obj.fitness(individual)) for individual in self.population]
+        fitness_list = [(individual, self.fitness_obj.fitness(individual), i)
+                        for i, individual in enumerate(self.population)]
 
         if k_selection_size < n_population_size:
             heap = []
-            for individual, fitness in fitness_list:
+            for individual, fitness, i in fitness_list:
                 if len(heap) < k_selection_size:
-                    heapq.heappush(heap, (fitness, individual))
+                    heapq.heappush(heap, (fitness, i, individual))
                 else:
                     if fitness > heap[0][0]:
-                        heapq.heapreplace(heap, (fitness, individual))
+                        heapq.heapreplace(heap, (fitness, i, individual))
 
-            sorted_pop = [individual for fitness, individual in sorted(heap, key=lambda x: x[0], reverse=True)]
+            sorted_pop = [individual for fitness, _, individual in sorted(heap, key=lambda x: x[0], reverse=True)]
 
         else:
-            sorted_pop = [individual for individual, fitness in sorted(fitness_list, key=lambda x: x[1], reverse=True)]
+            sorted_pop = [individual for individual, fitness, _ in
+                          sorted(fitness_list, key=lambda x: x[1], reverse=True)]
 
         selected = []
         for i, individual in enumerate(sorted_pop):
@@ -139,7 +142,7 @@ class Selection:
     @staticmethod
     def _binary_search(qi_values, target):
         left = 0
-        right= len(qi_values) - 1
+        right = len(qi_values) - 1
         while left < right:
             mid = (left + right) // 2
             if qi_values[mid] < target:
