@@ -1,0 +1,21 @@
+{
+  "n_population_size": 250,
+
+  "selection_method": "roulette",
+  "k_selection_size": 20,
+
+
+  "crossover_method": "one_point",
+  "crossover_probability": 0.7,
+
+  "mutation_method": "gene",
+  "mutation_probability": 0.1,
+
+
+  "implementation": "traditional",
+
+  "stop_condition": "max_generations",
+
+  "stop_condition_max_generations": 5000
+
+}
