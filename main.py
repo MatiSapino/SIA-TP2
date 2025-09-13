@@ -39,6 +39,7 @@ if __name__ == '__main__':
     parser.add_argument('--render-division', type=int, default=10, help='How often do you generate output images.')
     parser.add_argument('--print-progress', type=str, default="", help='Print progress data. Default = false')
     parser.add_argument('--render-path', type=str, default="./render", help='Path to the output folder.')
+    parser.add_argument('--output-image', type=str, default="output.png", help='Path to the output image.')
     parser_args = parser.parse_args()
     target_image_path = parser_args.target_image
     if target_image_path is None:
@@ -141,7 +142,7 @@ if __name__ == '__main__':
 
     with open(parser_args.target_csv, mode="w", newline="") as csv_file:
         writer = csv.writer(csv_file)
-        writer.writerow(["Generacion", "Fitness_Max", "Generational Breach"])
+        writer.writerow(["Generacion", "Fitness_Max", "Generational Breach","Time"])
         
         while not stop:
             selector = Selection(n_population, fitness_obj)
@@ -244,7 +245,7 @@ if __name__ == '__main__':
             generational_breach = sum(1 for individual in n_population if individual in k_children) / n_population_size
             current_best_individual = max(n_population, key=lambda individual: fitness_obj.fitness(individual))
             best_fitness_so_far = fitness_obj.fitness(current_best_individual)
-            writer.writerow([generation_count, best_fitness_so_far, generational_breach])
+            writer.writerow([generation_count, best_fitness_so_far, generational_breach, f"{time.time() - start_time:.2f}s" ])
             
             if parser_args.print_progress:
                 print(f"Generation: {generation_count}")
@@ -272,5 +273,5 @@ if __name__ == '__main__':
     print(f"Best Fitness: {best_individual.fitness:.4f}")
     print(f"Error: {error:.4f}")
 
-    cv2.imwrite("output.png", fitness_obj.render_individual(best_individual))
+    cv2.imwrite(parser_args.output_photo, fitness_obj.render_individual(best_individual))
     create_svg_from_individual(best_individual)
