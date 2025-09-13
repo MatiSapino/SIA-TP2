@@ -2,8 +2,8 @@ import argparse
 import csv
 import json
 import time
-
 import cv2
+import os
 
 from src.crossover.crossover import Crossover
 from src.fitness.fitness import Fitness
@@ -18,8 +18,11 @@ if __name__ == '__main__':
     parser.add_argument('--config-file', type=str, default="./configs/config.json",
                         help='Path to the configuration JSON file.')
     parser.add_argument('--target-csv', type=str, default="./fitnessEvolution.csv", help='Path to the fitness evolution data CSV file.')
+    parser.add_argument('--render-division', type=int, default=10, help='How often do you generate output images.')
+    parser.add_argument('--print-progress', type=bool, default=True, help='Print progress data.')
 
     parser_args = parser.parse_args()
+    os.makedirs("render", exist_ok=True)
 
     with open(parser_args.config_file, 'r') as file:
         config = json.load(file)
@@ -90,9 +93,11 @@ if __name__ == '__main__':
         stable_structure_generations = 0
         best_fitness_history = []
         stable_content_generations = 0
+
         with open(parser_args.target_csv, mode="w", newline="") as csv_file:
             writer = csv.writer(csv_file)
             writer.writerow(["Generacion", "Fitness_Max", "Generational Breach"])
+            
             while not stop:
                 selector = Selection(n_population, fitness_obj)
                 if hasattr(selector, selection_method):
@@ -147,14 +152,13 @@ if __name__ == '__main__':
 
                 if stop_condition == "structure":
                     m_relevant_population = int(n_population_size * stop_condition_structure_percentage)
-                    relevant_population = sorted(n_population, key=lambda ind: ind.fitness, reverse=True)[
-                        :m_relevant_population]
+                    relevant_population = sorted(n_population, key=lambda ind: ind.fitness, reverse=True)[:m_relevant_population]
                     relevant_population_history.append(relevant_population)
 
                     if len(relevant_population_history) > stop_condition_structure_generations:
                         old_relevant_population = relevant_population_history[0]
-
                         changed_individuals = 0
+
                         for i in range(m_relevant_population):
                             if relevant_population[i].get_triangles() != old_relevant_population[i].get_triangles():
                                 changed_individuals += 1
@@ -187,21 +191,23 @@ if __name__ == '__main__':
                     current_best_individual = max(n_population, key=lambda individual: individual.fitness)
                     best_fitness_so_far = current_best_individual.fitness
 
-                if generation_count % 10 == 0:
-                    print(f"Generation: {generation_count}, Time passed: {time.time() - start_time:.2f}s")
+                if generation_count % parser_args.render_division == 0:
                     best_individual_so_far = sorted(n_population, key=lambda ind: ind.fitness, reverse=True)[0]
-                    cv2.imwrite("output.png", fitness_obj.render_individual(best_individual_so_far))
+                    render_path = f"render/generation_{generation_count}.png"
+                    cv2.imwrite(render_path, fitness_obj.render_individual(best_individual_so_far))
 
-                generational_breach = sum(
-                    1 for individual in n_population if individual in k_children) / n_population_size
-                print(f"Generational Breach: {generational_breach:.2f}\n")
-
+                generational_breach = sum(1 for individual in n_population if individual in k_children) / n_population_size
                 current_best_individual = max(n_population, key=lambda individual: fitness_obj.fitness(individual))
                 best_fitness_so_far = fitness_obj.fitness(current_best_individual)
-                print(f"Generation Best Fitness: {best_fitness_so_far:.2f}\n")
                 writer.writerow([generation_count, best_fitness_so_far, generational_breach])
-                if stop_condition == "max_time_seconds" and (
-                        time.time() - start_time) >= stop_condition_max_time_seconds:
+                
+                if parser_args.print_progress:
+                    print(f"Generation: {generation_count}")
+                    print(f"Breach: {generational_breach:.2f}")
+                    print(f"Best Fitness: {best_fitness_so_far:.2f}")
+                    print(f"Time passed: {time.time() - start_time:.2f}s\n")
+
+                if stop_condition == "max_time_seconds" and (time.time() - start_time) >= stop_condition_max_time_seconds:
                     stop = True
                 elif stop_condition == "max_generations" and generation_count >= stop_condition_max_generations:
                     stop = True
@@ -223,7 +229,6 @@ if __name__ == '__main__':
 
         cv2.imwrite("output.png", fitness_obj.render_individual(best_individual))
 
-
         def create_svg_from_individual(individual, filename="output.svg"):
             img_width = target_image.shape[1]
             img_height = target_image.shape[0]
@@ -242,6 +247,5 @@ if __name__ == '__main__':
 
             with open(filename, 'w') as f:
                 f.write(svg_content)
-
 
         create_svg_from_individual(best_individual)
