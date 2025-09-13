@@ -21,7 +21,8 @@ class Fitness:
         lab_diff = np.abs(self.target_lab.astype("float") - generated_lab.astype("float"))
         error = float(np.mean(lab_diff))
 
-        fitness = 1.0 / (1.0 + error)
+        scale = 20
+        fitness = np.exp(-error / scale)
 
         individual.update_fitness(fitness)
         return fitness
