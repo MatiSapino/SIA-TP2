@@ -1,0 +1,22 @@
+{
+  "n_population_size": 10,
+
+  "selection_method": "probabilistic_tournaments",
+  "k_selection_size": 2,
+
+  "threshold": 0.75,
+
+  "crossover_method": "one_point",
+  "crossover_probability": 0.7,
+
+  "mutation_method": "gene",
+  "mutation_probability": 0.1,
+
+
+  "implementation": "traditional",
+
+  "stop_condition": "max_generations",
+
+  "stop_condition_max_generations": 5000
+
+}
