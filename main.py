@@ -37,10 +37,9 @@ if __name__ == '__main__':
                         help='Path to the configuration JSON file.')
     parser.add_argument('--target-csv', type=str, default="./fitnessEvolution.csv", help='Path to the fitness evolution data CSV file.')
     parser.add_argument('--render-division', type=int, default=10, help='How often do you generate output images.')
-    parser.add_argument('--print-progress', type=bool, default=True, help='Print progress data.')
+    parser.add_argument('--print-progress', type=str, default="", help='Print progress data. Default = false')
     parser.add_argument('--render-path', type=str, default="./render", help='Path to the output folder.')
     parser_args = parser.parse_args()
-
     target_image_path = parser_args.target_image
     if target_image_path is None:
         raise ValueError("Target image path is not specified in command line.")
