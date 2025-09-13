@@ -38,7 +38,7 @@ if __name__ == '__main__':
     parser.add_argument('--target-csv', type=str, default="./fitnessEvolution.csv", help='Path to the fitness evolution data CSV file.')
     parser.add_argument('--render-division', type=int, default=10, help='How often do you generate output images.')
     parser.add_argument('--print-progress', type=bool, default=True, help='Print progress data.')
-
+    parser.add_argument('--render-path', type=str, default="./render", help='Path to the output folder.')
     parser_args = parser.parse_args()
 
     target_image_path = parser_args.target_image
@@ -53,7 +53,7 @@ if __name__ == '__main__':
 
 # ----- RENDER FILES -----
 
-    render_dir = "./render"
+    render_dir = parser_args.render_path
     render_history_dir = os.path.join(render_dir, "history")
     os.makedirs(render_dir, exist_ok=True)
     os.makedirs(render_history_dir, exist_ok=True)
