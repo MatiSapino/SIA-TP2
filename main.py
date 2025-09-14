@@ -273,5 +273,5 @@ if __name__ == '__main__':
     print(f"Best Fitness: {best_individual.fitness:.4f}")
     print(f"Error: {error:.4f}")
 
-    cv2.imwrite(parser_args.output_photo, fitness_obj.render_individual(best_individual))
+    cv2.imwrite(parser_args.output_image, fitness_obj.render_individual(best_individual))
     create_svg_from_individual(best_individual)
