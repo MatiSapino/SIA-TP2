@@ -26,10 +26,8 @@ class Selection:
         # fitness_list = [(individual, self.fitness_obj.fitness(individual)) for individual in self.population]
         if self.use_threads:
             tasks = [(ind, self.fitness_obj, i) for i, ind in enumerate(self.population)]
-            print("ANtes de with")
             with ProcessPoolExecutor(max_workers=4) as executor:
                 fitness_list = list(executor.map(evaluate_individual, tasks))
-            print("despues de with")
         else:
             fitness_list = [(individual, self.fitness_obj.fitness(individual), i)
                         for i, individual in enumerate(self.population)]

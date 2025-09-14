@@ -287,7 +287,7 @@ if __name__ == '__main__':
                 best_individual_so_far = sorted(n_population, key=lambda ind: ind.fitness, reverse=True)[0]
                 render_path = f"render/generation_{generation_count}.png"
                 cv2.imwrite(render_path, fitness_obj.render_individual(best_individual_so_far))
-            print(f"Generation: {generation_count}")
+
             if parser_args.print_progress:
                 print(f"Generation: {generation_count}")
                 print(f"Breach: {generational_breach:.2f}")
@@ -304,6 +304,10 @@ if __name__ == '__main__':
                 stop = True
             elif stop_condition == "content" and stable_content_generations >= stop_condition_content_generations:
                 stop = True
+            if parser_args.threads:
+                print("close")
+                fitness_obj.close()
+                fitness_obj = ThreadFitness(shared_target_image.shape,shm_lab.name,shared_target_lab.shape, shared_target_lab.dtype)
 
     best_individual = sorted(n_population, key=lambda ind: ind.fitness, reverse=True)[0]
     error = (1.0 / best_individual.fitness) - 1.0

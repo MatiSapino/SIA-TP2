@@ -28,7 +28,6 @@ class ThreadFitness:
         fitness = np.exp(-error / scale)
 
         individual.update_fitness(fitness)
-        print(fitness)
         return fitness
 
     def relative_fitness(self, individual):
