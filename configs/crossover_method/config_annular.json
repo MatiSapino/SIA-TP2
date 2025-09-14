@@ -1,0 +1,21 @@
+{
+  "n_population_size": 500,
+
+  "selection_method": "deterministic_tournaments",
+  "k_selection_size": 600,
+  "m_selection_size": 100,
+
+  "crossover_method": "annular",
+  "crossover_probability": 0.9,
+
+
+  "mutation_method": "multigen_uniform",
+  "mutation_probability": 0.1,
+  "mutation_M": 5,
+
+  "implementation": "young-bias",
+
+  "stop_condition": "max_time_seconds",
+
+  "stop_condition_max_time_seconds": 5000
+}
