@@ -1,19 +1,37 @@
 import heapq
 import math
 import random
+from concurrent.futures import ProcessPoolExecutor
+
+
+def evaluate_individual(args):
+    individual, fitness_obj, idx = args
+    fitness = fitness_obj.fitness(individual)
+
+    return individual, fitness, idx
 
 
 class Selection:
 
-    def __init__(self, population, fitness_obj):
+    def __init__(self, population, fitness_obj, use_threads):
         self.population = population
         self.fitness_obj = fitness_obj
+        self.use_threads = use_threads
+
+
 
     def elite(self, k_selection_size):
         n_population_size = len(self.population)
 
         # fitness_list = [(individual, self.fitness_obj.fitness(individual)) for individual in self.population]
-        fitness_list = [(individual, self.fitness_obj.fitness(individual), i)
+        if self.use_threads:
+            tasks = [(ind, self.fitness_obj, i) for i, ind in enumerate(self.population)]
+            print("ANtes de with")
+            with ProcessPoolExecutor(max_workers=4) as executor:
+                fitness_list = list(executor.map(evaluate_individual, tasks))
+            print("despues de with")
+        else:
+            fitness_list = [(individual, self.fitness_obj.fitness(individual), i)
                         for i, individual in enumerate(self.population)]
 
         if k_selection_size < n_population_size:

@@ -1,8 +1,8 @@
 {
-  "n_population_size": 500,
+  "n_population_size": 250,
 
-  "selection_method": "deterministic_tournaments",
-  "k_selection_size": 600,
+  "selection_method": "elite",
+  "k_selection_size": 20,
   "temperature_c": 10,
   "temperature_0": 10,
   "k_constant": 5,

@@ -4,8 +4,12 @@ import json
 import time
 import cv2
 import os
+from multiprocessing import shared_memory
+
+import numpy as np
 
 from src.crossover.crossover import Crossover
+from src.fitness.ThreadFitness import ThreadFitness
 from src.fitness.fitness import Fitness
 from src.population.population import generate_initial_population
 from src.selection.selection import Selection
@@ -29,6 +33,23 @@ def create_svg_from_individual(individual, filename="output.svg"):
     with open(filename, 'w') as f:
         f.write(svg_content)
 
+def load_target_images_shared(target_image_path):
+    # Cargo imagen original
+    target_im = cv2.imread(target_image_path)
+
+    # Crear shared memory para target_image
+    shm_image = shared_memory.SharedMemory(create=True, size=target_im.nbytes)
+    shared_target_image = np.ndarray(target_im.shape, dtype=target_im.dtype, buffer=shm_image.buf)
+    shared_target_image[:] = target_im[:]
+
+    # Crear shared memory para target_lab
+    tar_lab = cv2.cvtColor(target_im, cv2.COLOR_BGR2LAB)
+    shm_lab = shared_memory.SharedMemory(create=True, size=tar_lab.nbytes)
+    shared_target_lab = np.ndarray(tar_lab.shape, dtype=tar_lab.dtype, buffer=shm_lab.buf)
+    shared_target_lab[:] = tar_lab[:]
+
+    return shared_target_image, shm_image, shared_target_lab, shm_lab
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Genetic Algorithm for image recreation.')
     parser.add_argument('--target-image', type=str, default="./src/data/flag.png", help='Path to the target image.')
@@ -40,11 +61,19 @@ if __name__ == '__main__':
     parser.add_argument('--print-progress', type=str, default="", help='Print progress data. Default = false')
     parser.add_argument('--render-path', type=str, default="./render", help='Path to the output folder.')
     parser.add_argument('--output-image', type=str, default="output.png", help='Path to the output image.')
+    parser.add_argument('--threads', type=str, default="", help='If set true, use threads for fitness calculation')
     parser_args = parser.parse_args()
     target_image_path = parser_args.target_image
     if target_image_path is None:
         raise ValueError("Target image path is not specified in command line.")
-    target_image = cv2.imread(target_image_path)
+
+    if parser_args.threads:
+        shared_target_image, shm_image, shared_target_lab, shm_lab = load_target_images_shared(target_image_path)
+        target_image = shared_target_image
+        target_lab = shared_target_lab
+    else:
+        target_image = cv2.imread(target_image_path)
+        target_lab = cv2.cvtColor(target_image, cv2.COLOR_BGR2LAB)
 
     triangles = parser_args.amount_of_triangles
     if triangles is None:
@@ -129,7 +158,10 @@ if __name__ == '__main__':
         raise ValueError(f"Invalid stop condition: {stop_condition}")
 
     n_population = generate_initial_population(target_image, n_population_size, amount_of_triangle)
-    fitness_obj = Fitness(n_population, target_image)
+    if parser_args.threads:
+        fitness_obj = ThreadFitness(shared_target_image.shape,shm_lab.name,shared_target_lab.shape, shared_target_lab.dtype)
+    else:
+        fitness_obj = Fitness(n_population, target_image)
 
     stop = False
     start_time = time.time()
@@ -145,7 +177,7 @@ if __name__ == '__main__':
         writer.writerow(["Generacion", "Fitness_Max", "Generational Breach","Time"])
         
         while not stop:
-            selector = Selection(n_population, fitness_obj)
+            selector = Selection(n_population, fitness_obj, parser_args.threads)
             if hasattr(selector, selection_method):
                 method = getattr(selector, selection_method)
                 selection_args = selection_method_args.get(selection_method, [])
@@ -172,15 +204,24 @@ if __name__ == '__main__':
 
             if implementation == "traditional":
                 combined_population = n_population + k_children
-                combined_fitness_obj = Fitness(combined_population, target_image)
-                combined_selector = Selection(combined_population, combined_fitness_obj)
+                if parser_args.threads:
+                    combined_fitness_obj = ThreadFitness(shared_target_image.shape, shm_lab.name, shared_target_lab.shape,
+                                                shared_target_lab.dtype)
+                else:
+                    combined_fitness_obj = Fitness(n_population, target_image)
+                combined_selector = Selection(combined_population, combined_fitness_obj, parser_args.threads)
                 method = getattr(combined_selector, selection_method)
                 new_population = method(n_population_size, *selection_args)
 
             elif implementation == "young-bias":
                 if k_children_size > n_population_size:
-                    children_fitness_obj = Fitness(k_children, target_image)
-                    children_selector = Selection(k_children, children_fitness_obj)
+                    if parser_args.threads:
+                        children_fitness_obj = ThreadFitness(shared_target_image.shape, shm_lab.name,
+                                                             shared_target_lab.shape,
+                                                             shared_target_lab.dtype)
+                    else:
+                        children_fitness_obj = Fitness(n_population, target_image)
+                    children_selector = Selection(k_children, children_fitness_obj, parser_args.threads)
                     method = getattr(children_selector, selection_method)
                     new_population = method(n_population_size, *selection_args)
                 else:
@@ -238,16 +279,15 @@ if __name__ == '__main__':
                 current_best_individual = max(n_population, key=lambda individual: individual.fitness)
                 best_fitness_so_far = current_best_individual.fitness
 
-            if generation_count % parser_args.render_division == 0:
-                best_individual_so_far = sorted(n_population, key=lambda ind: ind.fitness, reverse=True)[0]
-                render_path = f"render/generation_{generation_count}.png"
-                cv2.imwrite(render_path, fitness_obj.render_individual(best_individual_so_far))
-
             generational_breach = sum(1 for individual in n_population if individual in k_children) / n_population_size
             current_best_individual = max(n_population, key=lambda individual: fitness_obj.fitness(individual)) #TODO: aca porque vuelvo a calcular el fitness?
             best_fitness_so_far = fitness_obj.fitness(current_best_individual)# TODO: no puedo usar directamente ind.fitness?
             writer.writerow([generation_count, best_fitness_so_far, generational_breach, f"{time.time() - start_time:.2f}s" ])
-            
+            if generation_count % parser_args.render_division == 0:
+                best_individual_so_far = sorted(n_population, key=lambda ind: ind.fitness, reverse=True)[0]
+                render_path = f"render/generation_{generation_count}.png"
+                cv2.imwrite(render_path, fitness_obj.render_individual(best_individual_so_far))
+            print(f"Generation: {generation_count}")
             if parser_args.print_progress:
                 print(f"Generation: {generation_count}")
                 print(f"Breach: {generational_breach:.2f}")
@@ -276,5 +316,12 @@ if __name__ == '__main__':
 
     cv2.imwrite(parser_args.output_image, fitness_obj.render_individual(best_individual))
     create_svg_from_individual(best_individual)
+
+    if parser_args.threads:
+        fitness_obj.close()
+        shm_image.close()
+        shm_image.unlink()
+        shm_lab.close()
+        shm_lab.unlink()
 
 
