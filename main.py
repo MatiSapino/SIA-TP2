@@ -194,6 +194,7 @@ if __name__ == '__main__':
                 raise ValueError(f"Invalid implementation method: {implementation}")
 
             n_population = new_population
+            fitness_obj.population = n_population
             generation_count += 1
 
             if stop_condition == "structure":
@@ -243,8 +244,8 @@ if __name__ == '__main__':
                 cv2.imwrite(render_path, fitness_obj.render_individual(best_individual_so_far))
 
             generational_breach = sum(1 for individual in n_population if individual in k_children) / n_population_size
-            current_best_individual = max(n_population, key=lambda individual: fitness_obj.fitness(individual))
-            best_fitness_so_far = fitness_obj.fitness(current_best_individual)
+            current_best_individual = max(n_population, key=lambda individual: fitness_obj.fitness(individual)) #TODO: aca porque vuelvo a calcular el fitness?
+            best_fitness_so_far = fitness_obj.fitness(current_best_individual)# TODO: no puedo usar directamente ind.fitness?
             writer.writerow([generation_count, best_fitness_so_far, generational_breach, f"{time.time() - start_time:.2f}s" ])
             
             if parser_args.print_progress:
@@ -275,3 +276,5 @@ if __name__ == '__main__':
 
     cv2.imwrite(parser_args.output_image, fitness_obj.render_individual(best_individual))
     create_svg_from_individual(best_individual)
+
+
