@@ -1,3 +1,40 @@
+# TP2 SIA - Algoritmos Genéticos
+
+## Introducción
+
+Trabajo práctico para la materia Sistemas de Inteligencia Artificial con el
+objetivo de evaluar Algoritmos Genéticos
+
+[Enunciado](Enunciado.pdf)
+
+[Presentación](Presentacion.pdf)
+
+### Requisitos
+
+- Python3
+- pip3
+- [pipenv](https://pypi.org/project/pipenv/)
+
+### Instalación
+
+Parado en la carpeta del tp2 ejecutar
+
+```sh
+ pipenv install
+```
+
+para instalar las dependencias necesarias en el ambiente virtual
+
+## Ejecución
+Para ejecutar el algoritmo
+```
+pipenv run python main.py --target-image <target-image-path> --amount-of-triangles <amount> --config-file <config-path>
+```
+
+Por ejemplo:
+```
+pipenv run python main.py --target-image ./src/data/flag.png --amount-of-triangles 200 --config-file ./configs/config.json
+```
 
 En el archivo `config.json` se encuentran todos los **hiperparámetros** que controlan el comportamiento del algoritmo genético utilizado para recrear imágenes mediante triángulos.
 

@@ -244,8 +244,8 @@ if __name__ == '__main__':
                 cv2.imwrite(render_path, fitness_obj.render_individual(best_individual_so_far))
 
             generational_breach = sum(1 for individual in n_population if individual in k_children) / n_population_size
-            current_best_individual = max(n_population, key=lambda individual: fitness_obj.fitness(individual)) #TODO: aca porque vuelvo a calcular el fitness?
-            best_fitness_so_far = fitness_obj.fitness(current_best_individual)# TODO: no puedo usar directamente ind.fitness?
+            current_best_individual = max(n_population, key=lambda individual: fitness_obj.fitness(individual))
+            best_fitness_so_far = fitness_obj.fitness(current_best_individual)
             writer.writerow([generation_count, best_fitness_so_far, generational_breach, f"{time.time() - start_time:.2f}s" ])
             
             if parser_args.print_progress:
