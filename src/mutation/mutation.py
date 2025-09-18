@@ -12,13 +12,22 @@ class Mutation:
     def mutate_vertex(self, triangle):
         points = list(triangle.gen_triangle)
         idx = random.randint(0, 2)
-        new_point = (random.randint(0, self.width - 1), random.randint(0, self.height - 1))
-        points[idx] = new_point
 
-        if len(set(points)) == 3:
-            triangle.gen_triangle = tuple(points)
-        else:
-            pass
+        while True:
+            new_point = (random.randint(0, self.width - 1), random.randint(0, self.height - 1))
+            points[idx] = new_point
+
+            if len(set(points)) == 3 and self._area(*points) > 0:
+                triangle.gen_triangle = tuple(points)
+                break
+
+    @staticmethod
+    def _area(p1, p2, p3):
+        return abs(
+            p1[0] * (p2[1] - p3[1]) +
+            p2[0] * (p3[1] - p1[1]) +
+            p3[0] * (p1[1] - p2[1])
+        ) / 2
 
     def gene(self, individual):
         if random.random() < self.mutation_probability:
